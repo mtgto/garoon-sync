@@ -1,4 +1,4 @@
-import {app, dialog, ipcMain, shell, BrowserWindow} from "electron";
+import {app, dialog, ipcMain, shell, BrowserWindow, Menu} from "electron";
 import * as path from "path";
 import * as url from "url";
 import log from "./log";
@@ -49,6 +49,25 @@ const createTutorialWindow = (): void => {
             defaultFontFamily: fontFamilies[process.platform]
         }
     });
+    const menu = Menu.buildFromTemplate([
+        {
+            label: "Garoon-Sync",
+            submenu: [
+                {label: "Garoon-Sync について", role: "about"},
+                {label: "Garoon-Sync を終了", accelerator: "Cmd+Q", click: () => app.quit()} // todo windows
+            ]
+        }, {
+            label: "編集",
+            submenu: [
+                {label: "切り取り", accelerator: "CmdOrCtrl+X", role: "cut"},
+                {label: "コピー", accelerator: "CmdOrCtrl+C", role: "copy"},
+                {label: "貼り付け", accelerator: "CmdOrCtrl+V", role: "paste"},
+                {label: "削除", role: "delete"},
+                {label: "すべてを選択", accelerator: "CmdOrCtrl+A", role: "selectall"},
+            ]
+        }
+    ]);
+    Menu.setApplicationMenu(menu);
     tutorialWindow.loadURL(url.format({
         pathname: path.join(__dirname, "../../tutorial.html"),
         protocol: "file:",
