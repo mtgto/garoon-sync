@@ -4,7 +4,6 @@ import * as moment from "moment-timezone";
 import * as url from "url";
 import { fromGaroonSchedule, toGoogleCalendarEvent, Schedule, Attendee, Location, DateTime, Visibility, Status, Source, Transparency, RecurrencePattern, RecurrenceDaily, RecurrenceWeekly, RecurrenceWeeklyPattern } from "../../../app/js/main/schedule";
 import client from "../../../app/js/main/garoon";
-import User from "../../../app/js/main/user";
 
 const garoonUrl: url.URL = new url.URL("http://example.com/");
 
@@ -148,17 +147,11 @@ test("schedule which has exclusive datetime can be converted into a google calen
 			}
 		};
 	const schedule: Schedule = fromGaroonSchedule(json["schedule_event"]);
-	const userMap: { [userId: string]: User } = {
-		"6": new User("6", "田中 太郎", "tanaka@example.com")
-	};
-	const googleCalendarEvent = await toGoogleCalendarEvent(schedule, garoonUrl, (userId: string) => Promise.resolve(userMap[userId]));
+	const googleCalendarEvent = toGoogleCalendarEvent(schedule, garoonUrl);
 	const expected = {
 		id: "1234",
 		summary: "繰り返し予定のテスト",
 		description: "メモー",
-		attendees: [
-			{ displayName: "田中 太郎", email: "tanaka@example.com", responseStatus: "accepted" }
-		],
 		start: { dateTime: "2017-09-06T15:15:00.000Z", timeZone: "Asia/Tokyo" },
 		end: { dateTime: "2017-09-06T15:30:00.000Z", timeZone: "Asia/Tokyo" },
 		visibility: "private",

@@ -7,9 +7,7 @@ import garoonClient from "./garoon";
 import googleClient from "./google";
 import log from "./log";
 import {fromGaroonSchedule, Schedule, toGoogleCalendarEvent} from "./schedule";
-import User from "./user";
 import {ScheduleStore} from "./schedule-store";
-import {UserStore} from "./user-store";
 import {syncStateStore} from "./";
 import {startFetchGaroon, endFetchGaroon, startSyncGoogleCalendar, endSyncGoogleCalendar, endSync, updateProgress, Progress, SyncResult} from "./sync";
 
@@ -31,54 +29,6 @@ class Synchronizer {
     private syncPeriod: moment.Duration = moment.duration(30, "days");
 
     /**
-     * Convert garoon user to User.
-     *
-     * Return undefined if neither name nor email exists.
-     */
-    private static userFromGaroonUser = (user: UserType): User | undefined => {
-        if (user.attributes.name && user.attributes.email && Synchronizer.isValidEmail(user.attributes.email)) {
-            return new User(user.attributes.key, user.attributes.name, user.attributes.email);
-        } else {
-            return undefined;
-        }
-    }
-
-    /**
-     * Validate an email address
-     */
-    private static isValidEmail = (email: string): boolean => {
-        return /@/.test(email);
-    }
-
-    /**
-     * Fetch Garoon users and store.
-     *
-     * NOTE: Ignores the user who neither name nor email exists.
-     */
-    private static fetchUsersByIds = async (userIds: string[], userStore: UserStore): Promise<void> => {
-        if (userIds.length === 0) {
-            return Promise.resolve();
-        }
-
-        const storeFunc = async (garoonUser: UserType): Promise<void> => {
-            const user = Synchronizer.userFromGaroonUser(garoonUser);
-            if (user) {
-                await userStore.set(user);
-            }
-        };
-
-        const response: BaseGetUsersByIdResponseType = await garoonClient.getUsersByIds(userIds);
-
-        if (response.user) {
-            if (Array.isArray(response.user)) {
-                await Promise.all(response.user.map(storeFunc));
-            } else {
-                await storeFunc(response.user);
-            }
-        }
-    }
-
-    /**
      * @param start Schedule start time (inclusive)
      * @param end Schedule end time (exclusive)
      * @param maxRetry maximum retry count
@@ -96,7 +46,7 @@ class Synchronizer {
             }
         }).catch(reason => {
             // todo Retry only if failed by garoon's temporary error.
-            console.log(reason);
+            log.info(`Failed to fetch garoon schedules. reason: ${reason}`);
             if (maxRetry > 0) {
                 return this.fetchGaroonSchedules(start, end, maxRetry - 1);
             } else {
@@ -111,7 +61,7 @@ class Synchronizer {
      * @todo Abandon next sync reserved. Caller should register next sync.
      * @returns Sync result. Returns true if success.
      */
-    public sync = async (calendarId: string, userStore: UserStore, scheduleStore: ScheduleStore): Promise<boolean> => {
+    public sync = async (calendarId: string, scheduleStore: ScheduleStore): Promise<boolean> => {
         const garoonEventPageUrl: url.URL | undefined = config.getGaroonEventPageUrl();
         if (!garoonEventPageUrl) {
             const message = "Before sync, garoon event page URL is not set.";
@@ -129,13 +79,6 @@ class Synchronizer {
             const end: moment.Moment = moment(start).add(this.syncPeriod);
             log.info(`Start sync since ${start.format()} to ${end.format()}.`);
             const schedules: Schedule[] = await this.fetchGaroonSchedules(start, end);
-            const userIds: Set<string> = schedules.map(
-                schedule => schedule.attendees.map(
-                    attendee => attendee.id
-                )
-            ).reduce((userIdSet: Set<string>, userIds: string[]) => userIdSet.union(userIds), Set<string>());
-            const storedUserMap: Map<string, User> = await userStore.getByIds(userIds);
-            await Synchronizer.fetchUsersByIds(userIds.filter((userId: string) => storedUserMap.get(userId) === undefined).toArray(), userStore);
             syncStateStore.dispatch(endFetchGaroon(SyncResult.Success));
             log.info(`Finished to get garoon schedule. There are ${schedules.length} events.`);
 
@@ -146,13 +89,7 @@ class Synchronizer {
             await schedules.reduce((promise: Promise<void>, schedule: Schedule, index: number) => {
                 return promise.then(async () => {
                     const scheduleFromStore: Schedule | undefined = await scheduleStore.get(schedule.id);
-                    const json: any = await toGoogleCalendarEvent(schedule, garoonEventPageUrl, async (userId: string) => {
-                        const user = await userStore.get(userId);
-                        if (user && Synchronizer.isValidEmail(user.email)) {
-                            return user;
-                        }
-                        return undefined;
-                    });
+                    const json: any = toGoogleCalendarEvent(schedule, garoonEventPageUrl);
                     //console.log(JSON.stringify(json));
                     let needToStore: boolean = false;
                     if (!scheduleFromStore) {

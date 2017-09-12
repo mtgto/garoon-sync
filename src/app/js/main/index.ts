@@ -11,7 +11,6 @@ import setupTray from "./tray";
 import setupTutorial from "./tutorial";
 import synchronizer from "./synchronizer";
 import {ScheduleStore} from "./schedule-store";
-import {UserStore} from "./user-store";
 import reducer, {State as SyncState, SyncState as SyncingState} from "./sync";
 
 /**
@@ -36,7 +35,6 @@ if (alreadyLaunched) {
 }
 
 // singleton
-const userStore: UserStore = new UserStore(path.join(app.getPath("userData"), "user.db"));
 const scheduleStore: ScheduleStore = new ScheduleStore(path.join(app.getPath("userData"), "schedule.db"));
 export const syncStateStore: Store<SyncState> = createStore(reducer);
 
@@ -55,9 +53,9 @@ export const startSync = (): void => {
         }
         // Start sync only if not syncing.
         if (syncStateStore.getState().syncing.state === SyncingState.Initial) {
-            synchronizer.sync(googleCalendarId, userStore, scheduleStore).then(result => {
+            synchronizer.sync(googleCalendarId, scheduleStore).then(result => {
                 // Reserve next sync (todo: use more shorter interval when failed ?)
-                timer = setTimeout(() => synchronizer.sync(googleCalendarId, userStore, scheduleStore), syncInterval.asMilliseconds());
+                timer = setTimeout(() => synchronizer.sync(googleCalendarId, scheduleStore), syncInterval.asMilliseconds());
                 reservedDateTime = moment().add(syncInterval);
                 log.info(`Next sync starts at ${reservedDateTime.format("MM/DD HH:mm")}`);
             });

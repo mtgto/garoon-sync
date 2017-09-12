@@ -1,7 +1,6 @@
 import * as garoon from "garoon";
 import * as moment from "moment-timezone";
 import * as url from "url";
-import User from "./user";
 
 /**
  * タイムゾーン、日時を表す. 時間は省略可能.
@@ -44,12 +43,6 @@ export class Attendee implements IdValue {
         this.id = id;
         this.displayName= displayName;
     }
-}
-
-interface GoogleCalendarAttendee {
-    readonly email: string;
-    readonly displayName?: string;
-    readonly responseStatus: string;
 }
 
 export class Location implements IdValue {
@@ -413,11 +406,6 @@ const googleRecurrenceFromRecurrence = (start: DateTime, recurrence: Recurrences
     return [rrules.join(";")].concat(exrules);
 }
 
-const attendeeFromUser = (user: User): GoogleCalendarAttendee => {
-    // If responseStatus is blank, Google calendar may send invitations to all attendees.
-    return {email: user.email, displayName: user.displayName, responseStatus: "accepted"};
-}
-
 const transparencyFromEventTypeType = (eventTypeType: garoon.types.schedule.EventTypeType): Transparency => {
     switch (eventTypeType) {
         case "normal":
@@ -495,27 +483,15 @@ export const fromGaroonSchedule = (json: any): Schedule => {
 /**
  * Covert schedule to Google Calendar Event object.
  * 
- * Note: Set all attendees to UserStore before call this method if you want to use the attendees of event.
- * If UserStore doesn't store any attendee, the attendee is ignored.
- * 
  * @see https://developers.google.com/google-apps/calendar/v3/reference/events/insert
- * @todo add argument to the function to convert user id to user (not using UserStore singleton).
  * 
- * @param schedule 
+ * @returns An object to present a google calendar event.
  */
-export const toGoogleCalendarEvent = async (schedule: Schedule, garoonUrl: url.URL, userFindBy: (userId: string) => Promise<User | undefined>): Promise<any> => {
-    const users: (User | undefined)[] = await Promise.all(schedule.attendees.map(attendee => userFindBy(attendee.id)));
-    const attendees: GoogleCalendarAttendee[] = users.reduce((users: GoogleCalendarAttendee[], user: User | undefined) => {
-        if (user) {
-            users.push(attendeeFromUser(user));
-        }
-        return users;
-    }, []);
+export const toGoogleCalendarEvent = (schedule: Schedule, garoonUrl: url.URL): any => {
     const garoonEventUrl: url.URL = new url.URL(`?event=${schedule.id}`, garoonUrl);
     let result: any = {
         id: schedule.id,
         summary: schedule.summary,
-        attendees: attendees,
         start: googleDateTimeFromDateTime(schedule.start),
         end: googleDateTimeFromDateTime(schedule.end),
         visibility: schedule.visibility,
