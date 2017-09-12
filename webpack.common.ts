@@ -74,6 +74,7 @@ export const mainConfig: webpack.Configuration = {
     externals: {
         googleapis: "commonjs googleapis",
         "electron-store": "commonjs electron-store",
-        garoon: "commonjs garoon"
+        garoon: "commonjs garoon",
+        keytar: "commonjs keytar"
     }
 };

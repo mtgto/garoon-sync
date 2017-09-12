@@ -11,7 +11,7 @@
     "test:build": "tsc --outDir ./build",
     "test:run": "ava ./build/src/test",
     "test": "npm run test:build && npm run test:run",
-    "release:macos": "electron-packager ./ Garoon-Sync --platform=darwin --arch=x64 --icon=./resources/darwin/garoon-sync.icns --app-bundle-id=net.mtgto.garoonsync --prune=false --ignore='/\\.\\/node_modules/'"
+    "release:macos": "ts-node ./src/util/packager.ts"
   },
   "repository": "https://github.com/mtgto/garoon-sync",
   "author": "mtgto <hogerappa@gmail.com>",
