@@ -18,6 +18,23 @@ export interface Credentials {
     expiry_date: number
 }
 
+export enum GoogleCalendarApiErrorReason {
+    NotFound,
+    AlreadyExists,
+    Unknown
+}
+
+/**
+ * @param message An error message to describe when this error happened.
+ * @param reason The reason why the request failed.
+ * @param payload The raw response from googleapis.
+ */
+export interface GoogleCalendarApiErrorResponse {
+    readonly message: string;
+    readonly reason: GoogleCalendarApiErrorReason;
+    readonly payload: any; // raw data
+}
+
 /**
  * @see https://developers.google.com/google-apps/calendar/v3/reference/calendarList/list
  */
@@ -119,6 +136,29 @@ class GoogleClient {
         });
     }
 
+    createErrorResponse = (message: string, err: any): GoogleCalendarApiErrorResponse => {
+        if (err.code) {
+            if (err.code === 404) {
+                return {
+                    message: message,
+                    reason: GoogleCalendarApiErrorReason.NotFound,
+                    payload: err
+                };
+            } else if (err.code === 409) {
+                return {
+                    message: message,
+                    reason: GoogleCalendarApiErrorReason.AlreadyExists,
+                    payload: err
+                };
+            }
+        }
+        return {
+            message: message,
+            reason: GoogleCalendarApiErrorReason.Unknown,
+            payload: err
+        };
+    }
+
     insertEvent = async (calendarId: string, event: any): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
@@ -130,8 +170,8 @@ class GoogleClient {
             calendar.events.insert(parameters, (err: any, response: any) => {
                 if (err) {
                     const message = "Error while trying to insert a event into a calendar.";
-                    log.info(message, err);
-                    reject(new Error(message));
+                    log.info(message, err); // todo info -> debug
+                    reject(this.createErrorResponse(message, err));
                 } else {
                     resolve(response);
                 }
@@ -151,8 +191,8 @@ class GoogleClient {
             calendar.events.update(parameters, (err: any, response: any) => {
                 if (err) {
                     const message = "Error while trying to update a event into a calendar.";
-                    log.info(message, err);
-                    reject(new Error(message));
+                    log.info(message, err); // todo info -> debug
+                    reject(this.createErrorResponse(message, err));
                 } else {
                     resolve(response);
                 }
@@ -171,8 +211,8 @@ class GoogleClient {
             calendar.events.delete(parameters, (err: any, response: any) => {
                 if (err) {
                     const message = "Error while trying to delete a event into a calendar.";
-                    log.info(message, err);
-                    reject(new Error(message));
+                    log.info(message, err); // todo info -> debug
+                    reject(this.createErrorResponse(message, err));
                 } else {
                     resolve(response);
                 }

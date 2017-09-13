@@ -4,7 +4,7 @@ import * as url from "url";
 import {Map, Set} from "immutable";
 import config from "./config";
 import garoonClient from "./garoon";
-import googleClient from "./google";
+import googleClient, {GoogleCalendarApiErrorReason, GoogleCalendarApiErrorResponse} from "./google";
 import log from "./log";
 import {fromGaroonSchedule, Schedule, toGoogleCalendarEvent} from "./schedule";
 import {ScheduleStore} from "./schedule-store";
@@ -69,43 +69,72 @@ class Synchronizer {
             throw new Error(message);
         }
 
-        let succeeded: boolean = true;
+        let schedules: Schedule[];
         try {
-            // Fetch Garoon (schedules and attendees)
+            // Fetch Garoon schedules
             syncStateStore.dispatch(startFetchGaroon());
-            // const start: moment.Moment = moment("2017-08-20 00:00", "YYYY-MM-DD HH:mm");
-            // const end: moment.Moment = moment("2017-08-27 00:00", "YYYY-MM-DD HH:mm");
             const start: moment.Moment = moment();
             const end: moment.Moment = moment(start).add(this.syncPeriod);
             log.info(`Start sync since ${start.format()} to ${end.format()}.`);
-            const schedules: Schedule[] = await this.fetchGaroonSchedules(start, end);
+            schedules = await this.fetchGaroonSchedules(start, end);
             syncStateStore.dispatch(endFetchGaroon(SyncResult.Success));
             log.info(`Finished to get garoon schedule. There are ${schedules.length} events.`);
+        } catch (error) {
+            log.warn(`Failed to sync schedule. ${error}`);
+            syncStateStore.dispatch(endSync(SyncResult.Failed));
+            return Promise.resolve(false);
+        }
 
+        try {
             // Send schedules to Google Calendar
             let [addCount, modifyCount, ignoreCount] = [0, 0, 0];
             syncStateStore.dispatch(startSyncGoogleCalendar());
             // Send request serially (Until googleapis supports batch request)
             await schedules.reduce((promise: Promise<void>, schedule: Schedule, index: number) => {
                 return promise.then(async () => {
+                    log.info(`Start to sync schedule ID ${schedule.id} to google calendar.`);
                     const scheduleFromStore: Schedule | undefined = await scheduleStore.get(schedule.id);
                     const json: any = toGoogleCalendarEvent(schedule, garoonEventPageUrl);
                     //console.log(JSON.stringify(json));
                     let needToStore: boolean = false;
                     if (!scheduleFromStore) {
                         // New schedule. Need to import the event into Google Calendar.
-                        await googleClient.insertEvent(calendarId, json);
-                        addCount++;
-                        needToStore = true;
+                        try {
+                            await googleClient.insertEvent(calendarId, json);
+                            addCount++;
+                            needToStore = true;
+                        } catch (error) {
+                            if ((error as GoogleCalendarApiErrorResponse).reason === GoogleCalendarApiErrorReason.AlreadyExists) {
+                                log.info(`An inserting schedule ID "${schedule.id}" already exists in a calendar. Try update.`);
+                                await googleClient.updateEvent(calendarId, json);
+                                modifyCount++;
+                                needToStore = true;
+                            } else {
+                                log.warn(`Failed to insert a schedule. Error: ${error}`);
+                                throw error;
+                            }
+                        }
                     } else {
                         if (scheduleFromStore.version === schedule.version) {
                             // Already sync with Google Calendar. Do nothing.
                             ignoreCount++;
                         } else {
                             // Something changed. Need to update the event of Google Calendar.
-                            await googleClient.updateEvent(calendarId, json);
-                            modifyCount++;
-                            needToStore = true;
+                            try {
+                                await googleClient.updateEvent(calendarId, json);
+                                modifyCount++;
+                                needToStore = true;
+                            } catch (error) {
+                                if ((error as GoogleCalendarApiErrorResponse).reason === GoogleCalendarApiErrorReason.NotFound) {
+                                    log.info(`An updating scheduleID "${schedule.id}" already exists in a calendar. Try insert.`);
+                                    await googleClient.insertEvent(calendarId, json);
+                                    addCount++;
+                                    needToStore = true;
+                                } else {
+                                    log.warn(`Failed to update a schedule. Error: ${error}`);
+                                    throw error;
+                                }
+                            }
                         }
                     }
                     if (needToStore) {
@@ -119,12 +148,12 @@ class Synchronizer {
             syncStateStore.dispatch(endSyncGoogleCalendar(SyncResult.Success));
             syncStateStore.dispatch(endSync(SyncResult.Success));
             log.info(`Sync successed. ${addCount} added, ${modifyCount} modified and ${ignoreCount} ignored.`);
+            return Promise.resolve(true);
         } catch (error) {
-            succeeded = false;
             log.warn(`Failed to sync schedule. ${error}`);
             syncStateStore.dispatch(endSync(SyncResult.Failed));
+            return Promise.resolve(false);
         }
-        return Promise.resolve(succeeded);
     }
 }
 

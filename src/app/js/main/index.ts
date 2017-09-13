@@ -12,6 +12,7 @@ import setupTutorial from "./tutorial";
 import synchronizer from "./synchronizer";
 import {ScheduleStore} from "./schedule-store";
 import reducer, {State as SyncState, SyncState as SyncingState} from "./sync";
+import {toGoogleCalendarEvent} from "./schedule";
 
 /**
  * Sync interval
