@@ -23,7 +23,8 @@ const GaroonEventPage: React.StatelessComponent<Props> = (props: Props) =>
     <div>
         <h2>ガルーンのスケジュールページURLの設定</h2>
         <p>あなたがお使いのガルーンのスケジュールページのURLの "?" より前の部分までを入力して下さい。</p>
-        <p>この設定はGoogleカレンダーへの同期の際、ガルーンのスケジュールページへのリンクのために使われます。</p>
+        <p>例えばある予定のURLが http://example.com/view.csp?event=123 なら http://example.com/view.csp を入れて下さい。</p>
+        <p>この設定はGoogleカレンダーへの同期の際、Googleカレンダーの予定からガルーンのスケジュールページへのリンクのために使われます。</p>
         <TextField
             value={props.garoon.eventPageUrl.value}
             hintText="例: http://example.com/grn/schedule/view.csp"
