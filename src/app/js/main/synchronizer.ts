@@ -99,42 +99,44 @@ class Synchronizer {
                     let needToStore: boolean = false;
                     if (!scheduleFromStore) {
                         // New schedule. Need to import the event into Google Calendar.
-                        try {
-                            await googleClient.insertEvent(calendarId, json);
+                        await googleClient.insertEvent(calendarId, json).then(response => {
                             addCount++;
                             needToStore = true;
-                        } catch (error) {
+                        }).catch(error => {
                             if ((error as GoogleCalendarApiErrorResponse).reason === GoogleCalendarApiErrorReason.AlreadyExists) {
                                 log.info(`An inserting schedule ID "${schedule.id}" already exists in a calendar. Try update.`);
-                                await googleClient.updateEvent(calendarId, json);
-                                modifyCount++;
-                                needToStore = true;
+                                return googleClient.updateEvent(calendarId, json).then(response => {
+                                    modifyCount++;
+                                    needToStore = true;
+                                });
                             } else {
-                                log.warn(`Failed to insert a schedule. Error: ${error}`);
-                                throw error;
+                                return Promise.reject(error);
                             }
-                        }
+                        }).catch(error => {
+                            log.warn(`Failed to insert a schedule. Error: ${error}`);
+                        });
                     } else {
                         if (scheduleFromStore.version === schedule.version) {
                             // Already sync with Google Calendar. Do nothing.
                             ignoreCount++;
                         } else {
                             // Something changed. Need to update the event of Google Calendar.
-                            try {
-                                await googleClient.updateEvent(calendarId, json);
+                            await googleClient.updateEvent(calendarId, json).then(response => {
                                 modifyCount++;
                                 needToStore = true;
-                            } catch (error) {
+                            }).catch(error => {
                                 if ((error as GoogleCalendarApiErrorResponse).reason === GoogleCalendarApiErrorReason.NotFound) {
                                     log.info(`An updating scheduleID "${schedule.id}" already exists in a calendar. Try insert.`);
-                                    await googleClient.insertEvent(calendarId, json);
-                                    addCount++;
-                                    needToStore = true;
+                                    return googleClient.insertEvent(calendarId, json).then(response => {
+                                        addCount++;
+                                        needToStore = true;
+                                    });
                                 } else {
-                                    log.warn(`Failed to update a schedule. Error: ${error}`);
-                                    throw error;
+                                    return Promise.reject(error);
                                 }
-                            }
+                            }).catch(error => {
+                                log.warn(`Failed to update a schedule. Error: ${error}`);
+                            });
                         }
                     }
                     if (needToStore) {
