@@ -10,7 +10,10 @@ Garoon-Sync is a macOS / Windows GUI Application to sync your Cybozu Garoon sche
 
 ## Screenshot
 ### Tutorial
+![Tutorial window](img/tutorial.png)
+
 ### Menu icon
+![Menu icon](img/menu.jpg)
 
 ## Todo
 - [ ] Sync deleted schedules.
@@ -61,6 +64,15 @@ src
 - `src/app/js/main`
   - Scripts for Electron's main process.
   - All scripts are bundled to a file by webpack.
+
+## Related
+- [ガルーン同期](https://play.google.com/store/apps/details?id=com.forrep.calendar.sync&hl=ja)
+  - An android app for sync garoon with google calendar.
+- [cybozu/garoon-google](https://github.com/cybozu/garoon-google)
+  - Java CUI application for sync garoon with google calendar.
+
+## Thanks
+- App icon is created by [ドカベンメーカー](http://arkw.net/data/dokaben/) using [新ドカベンフォント](http://newdokabenfont.blog.jp/).
 
 ## License
 This software is released under the MIT License, see LICENSE.
