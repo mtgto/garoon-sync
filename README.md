@@ -1,5 +1,6 @@
 garoon-sync
 ====
+[![Build Status](https://travis-ci.org/mtgto/garoon-sync.svg?branch=master)](https://travis-ci.org/mtgto/garoon-sync)
 ![App Icon](img/icon.png)
 
 Garoon-Sync is a macOS / Windows GUI Application to sync your Cybozu Garoon schedule to Google Calendar.
