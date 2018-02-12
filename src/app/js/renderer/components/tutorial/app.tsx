@@ -1,6 +1,5 @@
 import * as React from "react";
 import RaisedButton from "material-ui/RaisedButton";
-import {TouchTapEventHandler} from "material-ui";
 import FirstPage from "../../containers/tutorial/first-page";
 import GaroonPage from "../../containers/tutorial/garoon-page";
 import GaroonEventPage from "../../containers/tutorial/garoon-event-page";

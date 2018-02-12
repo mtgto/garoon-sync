@@ -53,7 +53,7 @@ const GoogleAuthPage: React.StatelessComponent<Props> = (props: Props) =>
         <FlatButton
             label="認可画面をWebブラウザで開く"
             secondary={true}
-            onTouchTap={props.openAuthorizationView}
+            onClick={props.openAuthorizationView}
         /><br/>
         <TextField
             name="code"
@@ -62,13 +62,13 @@ const GoogleAuthPage: React.StatelessComponent<Props> = (props: Props) =>
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setAuthorizationCode(e.currentTarget.value)}
         /><br/>
         <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onTouchTap={props.handlePrev}/>
+        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
         <RaisedButton
             label="次へ"
             style={style}
             primary={true}
             disabled={props.googleCalendar.authorizationCode.length === 0}
-            onTouchTap={props.submit}
+            onClick={props.submit}
         />
     </div>;
 

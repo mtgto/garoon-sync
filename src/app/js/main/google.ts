@@ -118,7 +118,7 @@ class GoogleClient {
                     log.info(message, err);
                     reject(new Error(message));
                 } else {
-                    const items: any[] = response.items;
+                    const items: any[] = response.data.items;
                     calendars = calendars.concat(items.map<Calendar>(item => {
                         return {
                             id: item["id"],

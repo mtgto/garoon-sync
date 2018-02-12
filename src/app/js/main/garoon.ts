@@ -13,7 +13,7 @@ enum AuthMode {
 class GaroonClient {
     private readonly authMode: AuthMode;
     private garoonClient?: garoon.Client;
-    private account: GaroonAccount;
+    private account!: GaroonAccount;
     private sessionId: string | undefined = undefined;
 
     constructor(authMode: AuthMode) {

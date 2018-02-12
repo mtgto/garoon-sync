@@ -32,13 +32,13 @@ const GaroonEventPage: React.StatelessComponent<Props> = (props: Props) =>
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setEventPageUrl(e.currentTarget.value)}
             fullWidth={true}
         /><br/>
-        <RaisedButton label="戻る" style={style} onTouchTap={props.handlePrev}/>
+        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
         <RaisedButton
             label="次へ"
             style={style}
             disabled={!props.garoon.eventPageUrl.valid}
             primary={true}
-            onTouchTap={props.submit}
+            onClick={props.submit}
         />
     </div>
 

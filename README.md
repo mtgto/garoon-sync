@@ -29,10 +29,11 @@ Garoon-Sync is a macOS / Windows GUI Application to sync your Cybozu Garoon sche
 $ npm install --global-style
 
 # for native node modules. see https://electron.atom.io/docs/tutorial/using-native-node-modules
-$ ./node_modules/.bin/electron-rebuild
+$ npm run rebuild
+
 # If error occurred such as `no <openssl/rsa.h>` on macOS (For Homebrew user):
 $ brew install openssl
-$ LDFLAGS=-L/usr/local/opt/openssl/lib CPPFLAGS=-I/usr/local/opt/openssl/include ./node_modules/.bin/electron-rebuild
+$ LDFLAGS=-L/usr/local/opt/openssl/lib CPPFLAGS=-I/usr/local/opt/openssl/include npm run rebuild
 
 # see how to generate client id and secret: https://developers.google.com/google-apps/calendar/quickstart/nodejs
 $ GOOGLE_CLIENT_ID=XXXX GOOGLE_CLIENT_SECRET=YYYY npm run build

@@ -76,12 +76,12 @@ const GaroonPage: React.StatelessComponent<Props> = (props: Props) =>
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setPassword(e.currentTarget.value)}
         /><br/>
         <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onTouchTap={props.handlePrev}/>
+        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
         <RaisedButton
             label="次へ"
             style={style}
             primary={true}
-            onTouchTap={props.submit}
+            onClick={props.submit}
         />
     </div>;
 

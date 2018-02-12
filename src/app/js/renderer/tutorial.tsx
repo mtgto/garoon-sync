@@ -5,7 +5,6 @@ import { createStore, applyMiddleware, Store } from "redux";
 import { Provider } from "react-redux";
 import thunk from "redux-thunk";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
-import * as injectTapEventPlugin from "react-tap-event-plugin";
 import App from "./containers/tutorial/app";
 import reducer, { TutorialState } from "./modules/tutorial";
 import {setServerUrl, setEventPageUrl} from "./modules/garoon";
@@ -23,8 +22,6 @@ ipcRenderer.once(Constants.SetInitialDataResponseChannel, (event: Electron.Event
         store.dispatch(setEventPageUrl(initialData.garoonEventPageUrl));
     }
 });
-
-injectTapEventPlugin();
 
 render(
     <Provider store={store}>

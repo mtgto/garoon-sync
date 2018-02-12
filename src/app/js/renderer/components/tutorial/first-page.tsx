@@ -12,7 +12,7 @@ const FirstPage: React.StatelessComponent<Props> = (props: Props) =>
         <p>このアプリはガルーンのスケジュールをGoogle Calendarに同期することができます。</p>
         <p>セットアップ中にガルーンのアカウントとGoogle Calendarとの同期設定を行います。</p>
         <p>それでは次へボタンを押して次に進んで下さい。</p>
-        <RaisedButton label="次へ" primary={true} onTouchTap={props.handleNext}
+        <RaisedButton label="次へ" primary={true} onClick={props.handleNext}
         />
     </div>;
 

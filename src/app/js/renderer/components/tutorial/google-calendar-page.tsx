@@ -59,15 +59,15 @@ const GoogleCalendarPage: React.StatelessComponent<Props> = (props: Props) =>
             <MenuItem value={calendar.id} primaryText={calendar.summary}/>
         )}
         </SelectField>
-        <FlatButton label="カレンダーをリロードする" onTouchTap={props.reload}/><br/>
+        <FlatButton label="カレンダーをリロードする" onClick={props.reload}/><br/>
         <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onTouchTap={props.handlePrev}/>
+        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
         <RaisedButton
             label="次へ"
             style={style}
             primary={true}
             disabled={props.googleCalendar.calendarId === undefined}
-            onTouchTap={props.submit}
+            onClick={props.submit}
         />
     </div>;
 

@@ -31,7 +31,7 @@ const FinalPage: React.StatelessComponent<Props> = (props: Props) =>
         <RaisedButton
             label="完了"
             primary={true}
-            onTouchTap={props.submit}
+            onClick={props.submit}
         />
     </div>;
 
