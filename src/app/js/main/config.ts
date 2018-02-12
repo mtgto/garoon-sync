@@ -112,19 +112,21 @@ class Config {
     save = (): void => {
         this.store.set(CONFIG_VERSION_NAME, this.version);
         if (this.garoon) {
-            this.store.set(GAROON_CONFIG_NAME, {
+            const config: GaroonConfigWithoutSecret = {
                 serverUrl: this.garoon.serverUrl,
                 username: this.garoon.username,
                 eventPageUrl: this.garoon.eventPageUrl
-            } as GaroonConfigWithoutSecret);
+            };
+            this.store.set(GAROON_CONFIG_NAME, config);
             keytar.setPassword(GAROON_KEYTAR_SERVICE_NAME, this.garoon.username, this.garoon.password);
         }
         if (this.google) {
-            this.store.set(GOOGLE_CONFIG_NAME, {
+            const config: GoogleConfigWithoutSecret = {
                 calendarId: this.google.calendarId,
                 accessTokenGenerated: this.google.accessTokenGenerated,
                 expiryDate: this.google.expiryDate
-            } as GoogleConfigWithoutSecret);
+            };
+            this.store.set(GOOGLE_CONFIG_NAME, config);
             keytar.setPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME, this.google.accessToken);
             keytar.setPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_REFRESH_TOKEN_ACCOUNT_NAME, this.google.refreshToken);
         }

@@ -1,6 +1,7 @@
 import {types} from "garoon";
-import {Schedule, fromGaroonSchedule} from "./schedule";
+import {DateTime, Schedule, fromGaroonSchedule} from "./schedule";
 import {Store} from "./store";
+import {Moment} from "moment-timezone";
 
 /**
  * Schedule data structure for nedb.
@@ -8,6 +9,8 @@ import {Store} from "./store";
 interface StoredSchedule {
     readonly _id: string;
     readonly payload: types.schedule.EventType;
+    readonly start: DateTime;
+    readonly end: DateTime;
 }
 
 /**
@@ -21,8 +24,14 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         super(datastorePath);
     }
 
+    // getSchedules = (start: Moment, end: Moment): Promise<Schedule[]> => {
+    //     const schedule: StoredSchedule = {} as StoredSchedule;
+    //     this.datastore.find<StoredSchedule>({"payload": {}})
+    //     return Promise.resolve([]);
+    // }
+
     serializer = (schedule: Schedule): StoredSchedule => {
-        return { _id: schedule.id, payload: schedule.garoonEvent } as StoredSchedule;
+        return { _id: schedule.id, payload: schedule.garoonEvent, start: schedule.start, end: schedule.end };
     }
 
     deserializer = (obj: StoredSchedule): Schedule => {

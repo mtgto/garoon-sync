@@ -218,8 +218,8 @@ const recurrenceWeeklyPatternFromWeekday = (day: string): RecurrenceWeeklyPatter
     throw new Error(`Invalid input ${day}`);
 }
 
-const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRepeatInfo, timezone: string): Recurrence => {
-    let recurrence: Recurrence | undefined = undefined;
+const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRepeatInfo, timezone: string): Recurrences => {
+    let recurrence: Recurrences | undefined = undefined;
     let until: moment.Moment;
     if (repeatInfo.condition.attributes.end_date) {
         if (repeatInfo.condition.attributes.end_time) {
@@ -235,14 +235,14 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
             recurrence = {
                 pattern: RecurrencePattern.Daily,
                 until: until
-            } as RecurrenceDaily;
+            };
             break;
         case "weekday":
             recurrence = {
                 pattern: RecurrencePattern.Weekly,
                 until: until,
                 byday: RecurrenceWeekdayPattern
-            } as RecurrenceWeekly;
+            };
             break;
         case "week":
             if (repeatInfo.condition.attributes.week) {
@@ -250,7 +250,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Weekly,
                     until: until,
                     byday: [recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceWeekly;
+                };
             }
             break;
         case "1stweek":
@@ -259,7 +259,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     byday: [1, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceMonthly;
+                };
             }
             break;
         case "2ndweek":
@@ -268,7 +268,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     byday: [2, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceMonthly;
+                };
             }
             break;
         case "3rdweek":
@@ -277,7 +277,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     byday: [3, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceMonthly;
+                };
             }
             break;
         case "4thweek":
@@ -286,7 +286,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     byday: [4, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceMonthly;
+                };
             }
             break;
         case "lastweek":
@@ -295,7 +295,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     byday: [5, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())]
-                } as RecurrenceMonthly;
+                };
             }
             break;
         case "month":
@@ -304,7 +304,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.types.schedule.EventTypeRep
                     pattern: RecurrencePattern.Monthly,
                     until: until,
                     bymonthday: repeatInfo.condition.attributes.day
-                } as RecurrenceMonthly;
+                };
             }
             break;
     }
@@ -423,11 +423,11 @@ export const fromGaroonSchedule = (json: any): Schedule => {
     const [users, locations] = usersAndFacilitiesFromMemberOrMembers(event.members);
     const timezone: string = event.attributes.timezone;
     const endTimezone: string = json.attributes.end_timezone || timezone;
-    let recurrence: Recurrence | undefined;
+    let recurrence: Recurrences | undefined;
     const visibility: Visibility = event.attributes.public_type ? visibilityFromPublicType(event.attributes.public_type) : Visibility.Public;
-    let start: DateTime | undefined;
+    let start: DateTime;
     // For a recurrence event, this is the end time of the first instance.
-    let end: DateTime | undefined;
+    let end: DateTime;
     if (event.repeat_info) {
         recurrence = recurrenceFromRepeatInfo(event.repeat_info, timezone);
         // todo 終了日が開始日と同じならend_time, end_dateは省略されるのか？
@@ -446,9 +446,7 @@ export const fromGaroonSchedule = (json: any): Schedule => {
         if (event.when.date) {
             if (!Array.isArray(event.when.date)) {
                 start = new DateTime(moment(event.when.date.attributes.start).tz(timezone), false);
-                if (event.when.date.attributes.end) {
-                    end = new DateTime(moment(event.when.date.attributes.end).tz(endTimezone), false);
-                }
+                end = new DateTime(moment(event.when.date.attributes.end).tz(endTimezone), false);
             } else {
                 throw new Error(`Event ${event.attributes.id} has more one date.`);
             }
@@ -457,11 +455,17 @@ export const fromGaroonSchedule = (json: any): Schedule => {
                 start = new DateTime(moment(event.when.datetime.attributes.start).tz(timezone), true);
                 if (event.when.datetime.attributes.end) {
                     end = new DateTime(moment(event.when.datetime.attributes.end).tz(endTimezone), true);
+                } else {
+                    throw new Error(`Event ${event.attributes.id} doens't have event.when.datetime.attributes.end.`);
                 }
             } else {
                 throw new Error(`Event ${event.attributes.id} has more one datetime.`);
             }
+        } else {
+            throw new Error(`Event ${event.attributes.id} isn't supported: Neither event.when.date nor event.when.datetime exists.`);
         }
+    } else {
+        throw new Error(`Event ${event.attributes.id} isn't supported: Neither event.repeat_info not event.when exists.`);
     }
     return {
         id: event.attributes.id,
@@ -477,7 +481,7 @@ export const fromGaroonSchedule = (json: any): Schedule => {
         transparency: transparencyFromEventTypeType(event.attributes.event_type),
         recurrence: recurrence,
         garoonEvent: event
-    } as Schedule;
+    };
 }
 
 /**

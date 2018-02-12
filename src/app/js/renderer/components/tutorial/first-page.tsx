@@ -1,9 +1,11 @@
 import * as React from "react";
 import RaisedButton from "material-ui/RaisedButton";
 
-export interface Props {
+export interface ConnectedDispatchProps {
     readonly handleNext: () => void
 };
+
+type Props = ConnectedDispatchProps;
 
 const FirstPage: React.StatelessComponent<Props> = (props: Props) =>
     <div>
