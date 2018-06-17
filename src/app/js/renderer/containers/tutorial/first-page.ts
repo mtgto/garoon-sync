@@ -1,14 +1,13 @@
 import { connect, MapDispatchToProps } from "react-redux";
 import { Dispatch } from "redux";
-import { GaroonState, GaroonActions } from "../../modules/garoon";
-import * as Tutorial from "../../modules/tutorial";
-import FirstPage, {ConnectedDispatchProps} from "../../components/tutorial/first-page";
+import FirstPage, { ConnectedDispatchProps } from "../../components/tutorial/first-page";
+import { next, NextAction } from "../../modules/tutorial";
 
-const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, void> = (dispatch: Dispatch<any>) => ({
-    handleNext: () => dispatch(Tutorial.next())
+const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, {}> = (dispatch: Dispatch<NextAction>) => ({
+    handleNext: () => dispatch(next()),
 });
 
-/**
- * @todo mapDispatchToPropsの型定義
- */
-export default connect(mapDispatchToProps)(FirstPage);
+export default connect(
+    undefined,
+    mapDispatchToProps,
+)(FirstPage);

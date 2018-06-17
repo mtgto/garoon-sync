@@ -1,31 +1,30 @@
 import * as React from "react";
-import RaisedButton from "material-ui/RaisedButton";
+import FinalPage from "../../containers/tutorial/final-page";
 import FirstPage from "../../containers/tutorial/first-page";
-import GaroonPage from "../../containers/tutorial/garoon-page";
 import GaroonEventPage from "../../containers/tutorial/garoon-event-page";
+import GaroonPage from "../../containers/tutorial/garoon-page";
 import GoogleAuthPage from "../../containers/tutorial/google-auth-page";
 import GoogleCalendarPage from "../../containers/tutorial/google-calendar-page";
-import FinalPage from "../../containers/tutorial/final-page";
 
 export interface Props {
-    stepIndex: number
-};
+    stepIndex: number;
+}
 
 const App: React.StatelessComponent<Props> = (props: Props) => {
     switch (props.stepIndex) {
         case 0:
-            return <FirstPage/>;
+            return <FirstPage />;
         case 1:
-            return <GaroonPage/>;
+            return <GaroonPage />;
         case 2:
-            return <GaroonEventPage/>;
+            return <GaroonEventPage />;
         case 3:
-            return <GoogleAuthPage/>;
+            return <GoogleAuthPage />;
         case 4:
-            return <GoogleCalendarPage/>;
+            return <GoogleCalendarPage />;
         default:
-            return <FinalPage/>;
-    };
-}
+            return <FinalPage />;
+    }
+};
 
 export default App;

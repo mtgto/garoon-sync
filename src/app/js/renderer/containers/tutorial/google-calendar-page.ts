@@ -1,18 +1,26 @@
-import { connect, MapStateToProps, MapDispatchToProps } from "react-redux";
+import { connect, MapDispatchToProps, MapStateToProps } from "react-redux";
 import { Dispatch } from "redux";
-import * as GoogleCalendar from "../../modules/google-calendar";
-import * as Tutorial from "../../modules/tutorial";
-import GoogleCalendarPage, {ConnectedDispatchProps, ConnectedState} from "../../components/tutorial/google-calendar-page";
+import GoogleCalendarPage, {
+    ConnectedDispatchProps,
+    ConnectedState,
+} from "../../components/tutorial/google-calendar-page";
+import { loadWritableCalendars, selectCalendar, SelectCalendarAction } from "../../modules/google-calendar";
+import { next, NextAction, prev, PrevAction, TutorialState } from "../../modules/tutorial";
 
-const mapStateToProps: MapStateToProps<ConnectedState, void, Tutorial.TutorialState> = (state: Tutorial.TutorialState): ConnectedState => ({
-    googleCalendar: state.googleCalendar
+const mapStateToProps: MapStateToProps<ConnectedState, {}, TutorialState> = (state: TutorialState): ConnectedState => ({
+    googleCalendar: state.googleCalendar,
 });
 
-const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, void> = (dispatch: Dispatch<any>) => ({
-    selectCalendar: (event: any, index: number, menuItemValue: string) => dispatch(GoogleCalendar.selectCalendar(event, index, menuItemValue)),
-    reload: () => dispatch(GoogleCalendar.loadWritableCalendars((state: Tutorial.TutorialState) => state.googleCalendar)),
-    handlePrev: () => dispatch(Tutorial.prev()),
-    submit: () => dispatch(Tutorial.next())
+const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, {}> = (
+    dispatch: Dispatch<SelectCalendarAction | NextAction | PrevAction>,
+) => ({
+    selectCalendar: (calendarId: string) => dispatch(selectCalendar(calendarId)),
+    reload: () => dispatch(loadWritableCalendars((state: TutorialState) => state.googleCalendar) as any),
+    handlePrev: () => dispatch(prev()),
+    submit: () => dispatch(next()),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(GoogleCalendarPage);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(GoogleCalendarPage);

@@ -9,8 +9,8 @@ import {Moment} from "moment-timezone";
 interface StoredSchedule {
     readonly _id: string;
     readonly payload: types.schedule.EventType;
-    readonly start: DateTime;
-    readonly end: DateTime;
+    readonly start: string;
+    readonly end: string;
 }
 
 /**
@@ -24,14 +24,29 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         super(datastorePath);
     }
 
-    // getSchedules = (start: Moment, end: Moment): Promise<Schedule[]> => {
-    //     const schedule: StoredSchedule = {} as StoredSchedule;
-    //     this.datastore.find<StoredSchedule>({"payload": {}})
-    //     return Promise.resolve([]);
-    // }
+    getSchedules = (start: DateTime, end: DateTime): Promise<Schedule[]> => {
+        const schedule: StoredSchedule = {} as StoredSchedule;
+        this.datastore.find<StoredSchedule>({$or: [{"start": {$gte: this.serializeDateTime(start, true)}}, {"end": {$lte: this.serializeDateTime(end, false)}}]});
+        return Promise.resolve([]);
+    }
+
+    private serializeDateTime = (dateTime: DateTime, start: boolean): string => {
+        if (dateTime.hasTime) {
+            return dateTime.moment.format("YYYY-MM-DD HH:mm:SS");
+        } else if (start) {
+            return dateTime.moment.format("YYYY-MM-DD 00:00:00");
+        } else {
+            return dateTime.moment.format("YYYY-MM-DD 24:00:00");
+        }
+    }
 
     serializer = (schedule: Schedule): StoredSchedule => {
-        return { _id: schedule.id, payload: schedule.garoonEvent, start: schedule.start, end: schedule.end };
+        return {
+            _id: schedule.id,
+            payload: schedule.garoonEvent,
+            start: this.serializeDateTime(schedule.start, true),
+            end: this.serializeDateTime(schedule.end, false)
+        };
     }
 
     deserializer = (obj: StoredSchedule): Schedule => {

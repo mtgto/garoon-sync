@@ -1,23 +1,26 @@
+import Button from "@material-ui/core/Button";
+import { WithStyles, withStyles } from "@material-ui/core/styles";
+import FormControl from "@material-ui/core/FormControl";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
+import Select from "@material-ui/core/Select";
 import * as React from "react";
-import FlatButton from "material-ui/FlatButton";
-import RaisedButton from "material-ui/RaisedButton";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
-import {Calendar} from "../../../common/google";
+import { Calendar } from "../../../common/google";
 import * as GoogleCalendar from "../../modules/google-calendar";
+import { styles } from "../../styles";
 
 export interface ConnectedDispatchProps {
     readonly reload: () => void;
     readonly submit: () => void;
     readonly handlePrev: () => void;
-    readonly selectCalendar: (event: any, index: number, menuItemValue: string) => void;
+    readonly selectCalendar: (calendarId: string) => void;
 }
 
 export interface ConnectedState {
-    readonly googleCalendar: GoogleCalendar.GoogleCalendarState
+    readonly googleCalendar: GoogleCalendar.GoogleCalendarState;
 }
 
-type Props = ConnectedDispatchProps & ConnectedState;
+type Props = ConnectedDispatchProps & ConnectedState & WithStyles<typeof styles>;
 
 const informationMessage = (props: Props): string => {
     switch (props.googleCalendar.calendarLoading.state) {
@@ -36,39 +39,50 @@ const informationMessage = (props: Props): string => {
             }
         }
     }
-}
-
-const style: React.CSSProperties = {
-    margin: 12
 };
 
 /**
  * 同期先のカレンダーの選択画面
  */
-const GoogleCalendarPage: React.StatelessComponent<Props> = (props: Props) =>
-    <div>
+const GoogleCalendarPage = withStyles(styles)((props: Props) => (
+    <>
         <h2>Google Calendarの設定</h2>
         <p>ガルーンのスケジュールと同期するGoogle Calendarを選択してください。</p>
-        <p>もし新規にカレンダーを作りたい場合はWebブラウザでカレンダー作成してから「カレンダーをリロードする」ボタンを押して下さい</p>
-        <SelectField
-            floatingLabelText="同期するカレンダー"
-            value={props.googleCalendar.calendarId}
-            onChange={props.selectCalendar}
-        >
-        {props.googleCalendar.calendars.map(calendar =>
-            <MenuItem value={calendar.id} primaryText={calendar.summary}/>
-        )}
-        </SelectField>
-        <FlatButton label="カレンダーをリロードする" onClick={props.reload}/><br/>
+        <p>
+            もし新規にカレンダーを作りたい場合はWebブラウザでカレンダー作成してから「カレンダーをリロードする」ボタンを押して下さい
+        </p>
+        <FormControl className={props.classes.formControl}>
+            <InputLabel>同期するカレンダー</InputLabel>
+            <Select
+                autoWidth
+                value={props.googleCalendar.calendarId || ""}
+                onChange={e => props.selectCalendar(e.target.value)}
+            >
+                {props.googleCalendar.calendars.map((calendar, index) => (
+                    <MenuItem value={calendar.id} key={index}>
+                        {calendar.summary}
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+        <Button variant="flat" onClick={props.reload}>
+            カレンダーをリロードする
+        </Button>
+        <br />
         <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
-        <RaisedButton
-            label="次へ"
-            style={style}
-            primary={true}
+        <Button variant="raised" className={props.classes.button} onClick={props.handlePrev}>
+            戻る
+        </Button>
+        <Button
+            variant="raised"
+            className={props.classes.button}
+            color="primary"
             disabled={props.googleCalendar.calendarId === undefined}
             onClick={props.submit}
-        />
-    </div>;
+        >
+            次へ
+        </Button>
+    </>
+));
 
 export default GoogleCalendarPage;

@@ -1,0 +1,17 @@
+{
+    "extends": ["tslint:latest", "tslint-react"],
+    "rules": {
+        "arrow-parens": false,
+        "interface-name": [true, "never-prefix"],
+        "jsx-no-multiline-js": false,
+        "jsx-wrap-multiline": false,
+        "no-implicit-dependencies": [true, "dev"],
+        "no-submodule-imports": [true, "@material-ui/core", "@material-ui/icons"],
+        "object-literal-key-quotes": false,
+        "object-literal-sort-keys": false,
+        "ordered-imports": true,
+        "semicolon": [true, "always", "ignore-bound-class-methods"],
+        "jsx-boolean-value": false,
+        "jsx-no-lambda": false // It's not good, but ignoring because the jsx of this project is small.
+    }
+}

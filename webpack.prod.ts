@@ -5,23 +5,19 @@ const UglifyPlugin = require("uglifyjs-webpack-plugin");
 
 export default [
     merge(renderConfig, {
-        plugins: [
-            new webpack.DefinePlugin({
-                'process.env': {
-                    'NODE_ENV': JSON.stringify('production')
-                }
-            }),
-            new UglifyPlugin()
-        ]
+        mode: "production",
+        optimization: {
+            minimizer: [
+                new UglifyPlugin()
+            ]
+        }
     }),
     merge(mainConfig, {
-        plugins: [
-            new webpack.DefinePlugin({
-                'process.env': {
-                    'NODE_ENV': JSON.stringify('production')
-                }
-            }),
-            new UglifyPlugin()
-        ]
+        mode: "production",
+        optimization: {
+            minimizer: [
+                new UglifyPlugin()
+            ]
+        }
     })
 ];

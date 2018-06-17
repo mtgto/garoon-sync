@@ -1,6 +1,6 @@
+import Button from "@material-ui/core/Button";
+import TextField from "@material-ui/core/TextField";
 import * as React from "react";
-import RaisedButton from "material-ui/RaisedButton";
-import TextField from "material-ui/TextField";
 import * as Garoon from "../../modules/garoon";
 
 export interface ConnectedDispatchProps {
@@ -16,7 +16,7 @@ export interface ConnectedState {
 type Props = ConnectedDispatchProps & ConnectedState;
 
 const style: React.CSSProperties = {
-    margin: 12
+    margin: 12,
 };
 
 const GaroonEventPage: React.StatelessComponent<Props> = (props: Props) =>
@@ -26,20 +26,22 @@ const GaroonEventPage: React.StatelessComponent<Props> = (props: Props) =>
         <p>例えばある予定のURLが http://example.com/view.csp?event=123 なら http://example.com/view.csp を入れて下さい。</p>
         <p>この設定はGoogleカレンダーへの同期の際、Googleカレンダーの予定からガルーンのスケジュールページへのリンクのために使われます。</p>
         <TextField
+            required
             value={props.garoon.eventPageUrl.value}
-            hintText="例: http://example.com/grn/schedule/view.csp"
-            floatingLabelText="ガルーンのスケジュールURL"
-            onChange={(e: React.FormEvent<HTMLInputElement>) => props.setEventPageUrl(e.currentTarget.value)}
-            fullWidth={true}
+            helperText="例: http://example.com/grn/schedule/view.csp"
+            label="ガルーンのスケジュールURL"
+            onChange={e => props.setEventPageUrl(e.target.value)}
+            fullWidth
         /><br/>
-        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
-        <RaisedButton
-            label="次へ"
+        <Button variant="raised" style={style} onClick={props.handlePrev}>戻る</Button>
+        <Button
+            variant="raised"
             style={style}
             disabled={!props.garoon.eventPageUrl.valid}
-            primary={true}
+            color="primary"
             onClick={props.submit}
-        />
-    </div>
+        >次へ
+        </Button>
+    </div>;
 
 export default GaroonEventPage;

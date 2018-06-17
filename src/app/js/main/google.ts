@@ -1,6 +1,6 @@
-const google = require("googleapis");
+import { google } from "googleapis";
+import { Calendar } from "../common/google";
 import log from "./log";
-import {Calendar} from "../common/google";
 
 /**
  * @todo abandon when googleapis provides types.
@@ -9,19 +9,19 @@ type OAuth2Client = any;
 
 /**
  * Structure used in googleapis
- * 
+ *
  * @see https://github.com/google/google-api-nodejs-client/#making-authenticated-requests
  */
 export interface Credentials {
-    access_token: string
-    refresh_token: string
-    expiry_date: number
+    access_token: string;
+    refresh_token: string;
+    expiry_date: number;
 }
 
 export enum GoogleCalendarApiErrorReason {
     NotFound,
     AlreadyExists,
-    Unknown
+    Unknown,
 }
 
 /**
@@ -39,10 +39,10 @@ export interface GoogleCalendarApiErrorResponse {
  * @see https://developers.google.com/google-apps/calendar/v3/reference/calendarList/list
  */
 interface CalendarListParameters {
-    auth: OAuth2Client,
-    maxResults?: number, // default: 100
-    minAccessRole?: "freeBusyReader" | "owner" | "reader" | "writer", // default: no restriction
-    pageToken?: string
+    auth: OAuth2Client;
+    maxResults?: number; // default: 100
+    minAccessRole?: "freeBusyReader" | "owner" | "reader" | "writer"; // default: no restriction
+    pageToken?: string;
 }
 
 class GoogleClient {
@@ -66,15 +66,15 @@ class GoogleClient {
 
     /**
      * Generate authorization URL for retrieving grants to access to Google Calendar.
-     * 
+     *
      * After authorized, browser prints a code (to retrieve access token).
      */
     generateAuthUrl = (): string => {
         return this.oauth2Client.generateAuthUrl({
             access_type: "offline",
-            scope: ["https://www.googleapis.com/auth/calendar"]
+            scope: ["https://www.googleapis.com/auth/calendar"],
         });
-    }
+    };
 
     /**
      * Get access token by using one time code.
@@ -92,11 +92,11 @@ class GoogleClient {
                 }
             });
         });
-    }
+    };
 
     setCredentials = (credentials: Credentials): void => {
         this.oauth2Client.credentials = credentials;
-    }
+    };
 
     /**
      * Returns writable Google Calendar list.
@@ -107,10 +107,10 @@ class GoogleClient {
             let parameters: CalendarListParameters = {
                 auth: this.oauth2Client,
                 maxResults: 250,
-                minAccessRole: "owner"
+                minAccessRole: "owner",
             };
             if (pageToken) {
-                parameters = {...parameters, pageToken: pageToken};
+                parameters = { ...parameters, pageToken: pageToken };
             }
             calendar.calendarList.list(parameters, (err: any, response: any) => {
                 if (err) {
@@ -119,12 +119,14 @@ class GoogleClient {
                     reject(new Error(message));
                 } else {
                     const items: any[] = response.data.items;
-                    calendars = calendars.concat(items.map<Calendar>(item => {
-                        return {
-                            id: item["id"],
-                            summary: item["summary"]
-                        };
-                    }));
+                    calendars = calendars.concat(
+                        items.map<Calendar>(item => {
+                            return {
+                                id: item["id"],
+                                summary: item["summary"],
+                            };
+                        }),
+                    );
                     if (response.nextPageToken) {
                         // there are more calendars
                         return this.getWritableCalendars(calendars, response.nextPageToken);
@@ -134,7 +136,7 @@ class GoogleClient {
                 }
             });
         });
-    }
+    };
 
     createErrorResponse = (message: string, err: any): GoogleCalendarApiErrorResponse => {
         if (err.code) {
@@ -142,29 +144,29 @@ class GoogleClient {
                 return {
                     message: message,
                     reason: GoogleCalendarApiErrorReason.NotFound,
-                    payload: err
+                    payload: err,
                 };
             } else if (err.code === 409) {
                 return {
                     message: message,
                     reason: GoogleCalendarApiErrorReason.AlreadyExists,
-                    payload: err
+                    payload: err,
                 };
             }
         }
         return {
             message: message,
             reason: GoogleCalendarApiErrorReason.Unknown,
-            payload: err
+            payload: err,
         };
-    }
+    };
 
     insertEvent = async (calendarId: string, event: any): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
             auth: this.oauth2Client,
             calendarId: calendarId,
-            resource: event
+            resource: event,
         };
         return new Promise<void>((resolve, reject) => {
             calendar.events.insert(parameters, (err: any, response: any) => {
@@ -177,7 +179,7 @@ class GoogleClient {
                 }
             });
         });
-    }
+    };
 
     updateEvent = async (calendarId: string, event: any): Promise<any> => {
         const calendar: any = google.calendar("v3");
@@ -185,7 +187,7 @@ class GoogleClient {
             auth: this.oauth2Client,
             calendarId: calendarId,
             eventId: event.id,
-            resource: event
+            resource: event,
         };
         return new Promise<void>((resolve, reject) => {
             calendar.events.update(parameters, (err: any, response: any) => {
@@ -198,14 +200,14 @@ class GoogleClient {
                 }
             });
         });
-    }
+    };
 
     deleteEvent = async (calendarId: string, eventId: string): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
             auth: this.oauth2Client,
             calendarId: calendarId,
-            eventId: eventId
+            eventId: eventId,
         };
         return new Promise<void>((resolve, reject) => {
             calendar.events.delete(parameters, (err: any, response: any) => {
@@ -218,7 +220,7 @@ class GoogleClient {
                 }
             });
         });
-    }
+    };
 }
 
 const client = new GoogleClient();

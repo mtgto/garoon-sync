@@ -1,21 +1,32 @@
-import { connect, MapStateToProps, MapDispatchToProps } from "react-redux";
+import { connect, MapDispatchToProps, MapStateToProps } from "react-redux";
 import { Dispatch } from "redux";
-import * as GoogleCalendar from "../../modules/google-calendar";
-import * as Tutorial from "../../modules/tutorial";
-import GoogleAuthPage, {ConnectedDispatchProps, ConnectedState} from "../../components/tutorial/google-auth-page";
+import GoogleAuthPage, { ConnectedDispatchProps, ConnectedState } from "../../components/tutorial/google-auth-page";
+import {
+    openAuthorizationView,
+    OpenAuthorizationViewAction,
+    setAuthorizationCode,
+    SetAuthorizationCodeAction,
+    submit,
+} from "../../modules/google-calendar";
+import { prev, PrevAction, TutorialState } from "../../modules/tutorial";
 
-const mapStateToProps: MapStateToProps<ConnectedState, void, Tutorial.TutorialState> = (state: Tutorial.TutorialState): ConnectedState => ({
-    googleCalendar: state.googleCalendar
+const mapStateToProps: MapStateToProps<ConnectedState, {}, TutorialState> = (state: TutorialState): ConnectedState => ({
+    googleCalendar: state.googleCalendar,
 });
 
-const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, void> = (dispatch: Dispatch<any>) => ({
-    openAuthorizationView: () => dispatch(GoogleCalendar.openAuthorizationView()),
-    submit: () => dispatch(GoogleCalendar.submit((state: Tutorial.TutorialState) => state.googleCalendar)),
-    handlePrev: () => dispatch(Tutorial.prev()),
-    setAuthorizationCode: (code: string) => dispatch(GoogleCalendar.setAuthorizationCode(code))
+const mapDispatchToProps: MapDispatchToProps<ConnectedDispatchProps, {}> = (
+    dispatch: Dispatch<PrevAction | SetAuthorizationCodeAction>,
+) => ({
+    openAuthorizationView: () => dispatch(openAuthorizationView() as any),
+    submit: () => dispatch(submit((state: TutorialState) => state.googleCalendar) as any),
+    handlePrev: () => dispatch(prev()),
+    setAuthorizationCode: (code: string) => dispatch(setAuthorizationCode(code)),
 });
 
 /**
  * @todo mapDispatchToPropsの型定義
  */
-export default connect(mapStateToProps, mapDispatchToProps)(GoogleAuthPage);
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(GoogleAuthPage);

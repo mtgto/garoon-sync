@@ -1,21 +1,22 @@
+import Button from "@material-ui/core/Button";
+import { WithStyles, withStyles } from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
 import * as React from "react";
-import FlatButton from "material-ui/FlatButton";
-import RaisedButton from "material-ui/RaisedButton";
-import TextField from "material-ui/TextField";
 import * as GoogleCalendar from "../../modules/google-calendar";
+import { styles } from "../../styles";
 
 export interface ConnectedDispatchProps {
-    readonly openAuthorizationView: () => void
-    readonly submit: () => void
-    readonly handlePrev: () => void
-    readonly setAuthorizationCode: (code: string) => void
+    readonly openAuthorizationView: () => void;
+    readonly submit: () => void;
+    readonly handlePrev: () => void;
+    readonly setAuthorizationCode: (code: string) => void;
 }
 
 export interface ConnectedState {
-    readonly googleCalendar: GoogleCalendar.GoogleCalendarState
+    readonly googleCalendar: GoogleCalendar.GoogleCalendarState;
 }
 
-type Props = ConnectedDispatchProps & ConnectedState;
+type Props = ConnectedDispatchProps & ConnectedState & WithStyles<typeof styles>;
 
 const informationMessage = (props: Props): string => {
     switch (props.googleCalendar.verifying.state) {
@@ -36,40 +37,46 @@ const informationMessage = (props: Props): string => {
             }
         }
     }
-}
+};
 
 const style: React.CSSProperties = {
-    margin: 12
+    margin: 12,
 };
 
 /**
  * OAuthアクセストークンの取得画面（実際の認可はWebブラウザで行う）
  */
-const GoogleAuthPage: React.StatelessComponent<Props> = (props: Props) =>
-    <div>
+const GoogleAuthPage = withStyles(styles)((props: Props) => (
+    <>
         <h2>Google Calendarの設定</h2>
         <p>ガルーンのスケジュールと同期するGoogle Calendarの設定を行います。</p>
         <p>下のボタンを押すとブラウザが開きます. 認可後に表示されるコードを入力して「次へ」ボタンを押して下さい</p>
-        <FlatButton
-            label="認可画面をWebブラウザで開く"
-            secondary={true}
-            onClick={props.openAuthorizationView}
-        /><br/>
+        <Button variant="flat" color="secondary" onClick={props.openAuthorizationView}>
+            認可画面をWebブラウザで開く
+        </Button>
+        <br />
         <TextField
+            fullWidth
             name="code"
             value={props.googleCalendar.authorizationCode}
-            floatingLabelText="認可コード"
+            label="認可コード"
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setAuthorizationCode(e.currentTarget.value)}
-        /><br/>
+        />
+        <br />
         <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
-        <RaisedButton
-            label="次へ"
+        <Button variant="raised" style={style} onClick={props.handlePrev}>
+            戻る
+        </Button>
+        <Button
+            variant="raised"
             style={style}
-            primary={true}
+            color="primary"
             disabled={props.googleCalendar.authorizationCode.length === 0}
             onClick={props.submit}
-        />
-    </div>;
+        >
+            次へ
+        </Button>
+    </>
+));
 
 export default GoogleAuthPage;

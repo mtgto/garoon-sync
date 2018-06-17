@@ -1,7 +1,9 @@
+import Button from "@material-ui/core/Button";
+import { WithStyles, withStyles } from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
 import * as React from "react";
-import RaisedButton from "material-ui/RaisedButton";
-import TextField from "material-ui/TextField";
 import * as Garoon from "../../modules/garoon";
+import { styles } from "../../styles";
 
 export interface ConnectedDispatchProps {
     readonly submit: () => void;
@@ -12,15 +14,15 @@ export interface ConnectedDispatchProps {
 }
 
 export interface ConnectedState {
-    readonly garoon: Garoon.GaroonState
+    readonly garoon: Garoon.GaroonState;
 }
 
-type Props = ConnectedDispatchProps & ConnectedState;
+type Props = ConnectedDispatchProps & ConnectedState & WithStyles<typeof styles>;
 
 const enum GaroonPageInputName {
     ServerUrl = "serverUrl",
     Username = "username",
-    Password = "password"
+    Password = "password",
 }
 
 const informationMessage = (props: Props): string => {
@@ -42,47 +44,60 @@ const informationMessage = (props: Props): string => {
             }
         }
     }
-}
-
-const style: React.CSSProperties = {
-    margin: 12
 };
 
-const GaroonPage: React.StatelessComponent<Props> = (props: Props) =>
-    <div>
+const style: React.CSSProperties = {
+    margin: 12,
+};
+
+const GaroonPage = withStyles(styles)((props: Props) => (
+    <>
         <h2>ガルーンの設定</h2>
         <p>ガルーンのURL、ユーザーID、パスワードを入力して下さい。</p>
         <TextField
+            required
+            className={props.classes.textField}
             name={GaroonPageInputName.ServerUrl}
             value={props.garoon.serverUrl.value}
-            hintText="http://example.com/"
-            errorText={props.garoon.serverUrl.errorText}
-            floatingLabelText="ガルーンのURL"
-            onChange={(e: React.FormEvent<HTMLInputElement>) => props.setServerUrl(e.currentTarget.value)}
-        /><br/>
+            error={props.garoon.serverUrl.errorText !== undefined}
+            placeholder="http://example.com/"
+            helperText={props.garoon.serverUrl.errorText}
+            type="url"
+            label="ガルーンのURL"
+            onChange={e => props.setServerUrl(e.target.value)}
+        />
+        <br />
         <TextField
+            required
+            className={props.classes.textField}
             name={GaroonPageInputName.Username}
             value={props.garoon.username.value}
-            errorText={props.garoon.username.errorText}
-            floatingLabelText="ユーザーID"
+            error={props.garoon.username.errorText !== undefined}
+            helperText={props.garoon.username.errorText}
+            label="ユーザーID"
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setUsername(e.currentTarget.value)}
-        /><br/>
+        />
+        <br />
         <TextField
+            required
+            className={props.classes.textField}
             name={GaroonPageInputName.Password}
             value={props.garoon.password.value}
-            errorText={props.garoon.password.errorText}
+            error={props.garoon.password.errorText !== undefined}
+            helperText={props.garoon.password.errorText}
             type="password"
-            floatingLabelText="パスワード"
+            label="パスワード"
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setPassword(e.currentTarget.value)}
-        /><br/>
-        <p>{informationMessage(props)}</p>
-        <RaisedButton label="戻る" style={style} onClick={props.handlePrev}/>
-        <RaisedButton
-            label="次へ"
-            style={style}
-            primary={true}
-            onClick={props.submit}
         />
-    </div>;
+        <br />
+        <p>{informationMessage(props)}</p>
+        <Button variant="raised" style={style} onClick={props.handlePrev}>
+            戻る
+        </Button>
+        <Button variant="raised" style={style} color="primary" onClick={props.submit}>
+            次へ
+        </Button>
+    </>
+));
 
 export default GaroonPage;

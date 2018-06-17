@@ -1,8 +1,8 @@
 import ElectronStore = require("electron-store");
 import * as keytar from "keytar";
 import * as url from "url";
-import {GaroonAccount} from "../common/garoon";
-import {Credentials as GoogleCredentials} from "./google";
+import { GaroonAccount } from "../common/garoon";
+import { Credentials as GoogleCredentials } from "./google";
 
 type Secret<T> = T;
 
@@ -39,7 +39,7 @@ interface GoogleConfig extends GoogleConfigWithoutSecret {
 
 /**
  * Configuration store (save and load)
- * 
+ *
  * @todo refactor name of methods (congestion of setter/getter and getXXX, setXXX)
  */
 class Config {
@@ -51,8 +51,8 @@ class Config {
     constructor() {
         this.store = new ElectronStore({
             defaults: {
-                version: this.version
-            }
+                version: this.version,
+            },
         });
     }
 
@@ -61,7 +61,7 @@ class Config {
             return {
                 serverUrl: this.garoon.serverUrl,
                 username: this.garoon.username,
-                password: this.garoon.password
+                password: this.garoon.password,
             };
         }
     }
@@ -72,23 +72,23 @@ class Config {
                 serverUrl: garoonAccount.serverUrl,
                 username: garoonAccount.username,
                 password: garoonAccount.password,
-                eventPageUrl: eventPageUrl
-            }
+                eventPageUrl: eventPageUrl,
+            };
         }
-    }
+    };
 
     getGaroonEventPageUrl = (): url.URL | undefined => {
         if (this.garoon) {
             return new url.URL(this.garoon.eventPageUrl);
         }
-    }
+    };
 
     get googleCredentials(): GoogleCredentials | undefined {
         if (this.google) {
             return {
                 access_token: this.google.accessToken,
                 refresh_token: this.google.refreshToken,
-                expiry_date: this.google.expiryDate
+                expiry_date: this.google.expiryDate,
             };
         }
     }
@@ -100,14 +100,14 @@ class Config {
                 accessToken: credentials.access_token,
                 refreshToken: credentials.refresh_token,
                 expiryDate: credentials.expiry_date,
-                calendarId: calendarId
+                calendarId: calendarId,
             };
         }
-    }
+    };
 
     getGoogleCalendarId = (): string | undefined => {
         return this.google ? this.google.calendarId : undefined;
-    }
+    };
 
     save = (): void => {
         this.store.set(CONFIG_VERSION_NAME, this.version);
@@ -115,7 +115,7 @@ class Config {
             const config: GaroonConfigWithoutSecret = {
                 serverUrl: this.garoon.serverUrl,
                 username: this.garoon.username,
-                eventPageUrl: this.garoon.eventPageUrl
+                eventPageUrl: this.garoon.eventPageUrl,
             };
             this.store.set(GAROON_CONFIG_NAME, config);
             keytar.setPassword(GAROON_KEYTAR_SERVICE_NAME, this.garoon.username, this.garoon.password);
@@ -124,13 +124,21 @@ class Config {
             const config: GoogleConfigWithoutSecret = {
                 calendarId: this.google.calendarId,
                 accessTokenGenerated: this.google.accessTokenGenerated,
-                expiryDate: this.google.expiryDate
+                expiryDate: this.google.expiryDate,
             };
             this.store.set(GOOGLE_CONFIG_NAME, config);
-            keytar.setPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME, this.google.accessToken);
-            keytar.setPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_REFRESH_TOKEN_ACCOUNT_NAME, this.google.refreshToken);
+            keytar.setPassword(
+                GOOGLE_KEYTAR_SERVICE_NAME,
+                GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME,
+                this.google.accessToken,
+            );
+            keytar.setPassword(
+                GOOGLE_KEYTAR_SERVICE_NAME,
+                GOOGLE_KEYTAR_REFRESH_TOKEN_ACCOUNT_NAME,
+                this.google.refreshToken,
+            );
         }
-    }
+    };
 
     load = async (): Promise<void> => {
         const version = this.store.get(CONFIG_VERSION_NAME);
@@ -148,25 +156,31 @@ class Config {
                     serverUrl: garoon.serverUrl,
                     username: garoon.username,
                     eventPageUrl: garoon.eventPageUrl,
-                    password: password
+                    password: password,
                 };
             }
         }
         const google: GoogleConfigWithoutSecret | undefined = this.store.get(GOOGLE_CONFIG_NAME);
         if (google) {
-            const googleAccessToken = await keytar.getPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME);
-            const googleRefreshToken = await keytar.getPassword(GOOGLE_KEYTAR_SERVICE_NAME, GOOGLE_KEYTAR_REFRESH_TOKEN_ACCOUNT_NAME);
+            const googleAccessToken = await keytar.getPassword(
+                GOOGLE_KEYTAR_SERVICE_NAME,
+                GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME,
+            );
+            const googleRefreshToken = await keytar.getPassword(
+                GOOGLE_KEYTAR_SERVICE_NAME,
+                GOOGLE_KEYTAR_REFRESH_TOKEN_ACCOUNT_NAME,
+            );
             if (googleAccessToken && googleRefreshToken) {
                 this.google = {
                     accessTokenGenerated: google.accessTokenGenerated,
                     expiryDate: google.expiryDate,
                     accessToken: googleAccessToken,
                     refreshToken: googleRefreshToken,
-                    calendarId: google.calendarId
+                    calendarId: google.calendarId,
                 };
             }
         }
-    }
+    };
 }
 
 const config = new Config();
