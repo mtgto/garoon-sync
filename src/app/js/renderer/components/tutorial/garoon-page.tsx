@@ -1,6 +1,7 @@
 import Button from "@material-ui/core/Button";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import * as Garoon from "../../modules/garoon";
 import { styles } from "../../styles";
@@ -52,8 +53,12 @@ const style: React.CSSProperties = {
 
 const GaroonPage = withStyles(styles)((props: Props) => (
     <>
-        <h2>ガルーンの設定</h2>
-        <p>ガルーンのURL、ユーザーID、パスワードを入力して下さい。</p>
+        <h2>
+            <Typography variant="headline">ガルーンの設定</Typography>
+        </h2>
+        <Typography>
+            <p>ガルーンのURL、ユーザーID、パスワードを入力して下さい。</p>
+        </Typography>
         <TextField
             required
             className={props.classes.textField}
@@ -90,7 +95,9 @@ const GaroonPage = withStyles(styles)((props: Props) => (
             onChange={(e: React.FormEvent<HTMLInputElement>) => props.setPassword(e.currentTarget.value)}
         />
         <br />
-        <p>{informationMessage(props)}</p>
+        <Typography>
+            <p>{informationMessage(props)}</p>
+        </Typography>
         <Button variant="raised" style={style} onClick={props.handlePrev}>
             戻る
         </Button>

@@ -1,5 +1,6 @@
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import * as Garoon from "../../modules/garoon";
 
@@ -21,10 +22,12 @@ const style: React.CSSProperties = {
 
 const GaroonEventPage: React.StatelessComponent<Props> = (props: Props) =>
     <div>
-        <h2>ガルーンのスケジュールページURLの設定</h2>
+        <h2><Typography variant="headline">ガルーンのスケジュールページURLの設定</Typography></h2>
+        <Typography>
         <p>あなたがお使いのガルーンのスケジュールページのURLの "?" より前の部分までを入力して下さい。</p>
         <p>例えばある予定のURLが http://example.com/view.csp?event=123 なら http://example.com/view.csp を入れて下さい。</p>
         <p>この設定はGoogleカレンダーへの同期の際、Googleカレンダーの予定からガルーンのスケジュールページへのリンクのために使われます。</p>
+        </Typography>
         <TextField
             required
             value={props.garoon.eventPageUrl.value}

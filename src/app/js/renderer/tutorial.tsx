@@ -1,3 +1,4 @@
+import { createMuiTheme, MuiThemeProvider } from "@material-ui/core/styles";
 import { ipcRenderer } from "electron";
 import * as React from "react";
 import { render } from "react-dom";
@@ -25,9 +26,17 @@ ipcRenderer.once(
     },
 );
 
+const theme = createMuiTheme({
+    typography: {
+        fontFamily: ["Roboto", "'Noto Sans JP'", "Helvetica", "Arial", "sans-serif"].join(","),
+    },
+});
+
 render(
     <Provider store={store}>
-        <App />
+        <MuiThemeProvider theme={theme}>
+            <App />
+        </MuiThemeProvider>
     </Provider>,
     document.getElementById("root"),
 );

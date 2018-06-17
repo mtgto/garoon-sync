@@ -1,6 +1,7 @@
 import Button from "@material-ui/core/Button";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
+import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import * as GoogleCalendar from "../../modules/google-calendar";
 import { styles } from "../../styles";
@@ -48,22 +49,26 @@ const style: React.CSSProperties = {
  */
 const GoogleAuthPage = withStyles(styles)((props: Props) => (
     <>
-        <h2>Google Calendarの設定</h2>
-        <p>ガルーンのスケジュールと同期するGoogle Calendarの設定を行います。</p>
-        <p>下のボタンを押すとブラウザが開きます. 認可後に表示されるコードを入力して「次へ」ボタンを押して下さい</p>
-        <Button variant="flat" color="secondary" onClick={props.openAuthorizationView}>
-            認可画面をWebブラウザで開く
-        </Button>
-        <br />
-        <TextField
-            fullWidth
-            name="code"
-            value={props.googleCalendar.authorizationCode}
-            label="認可コード"
-            onChange={(e: React.FormEvent<HTMLInputElement>) => props.setAuthorizationCode(e.currentTarget.value)}
-        />
-        <br />
-        <p>{informationMessage(props)}</p>
+        <h2>
+            <Typography variant="headline">Google Calendarの設定</Typography>
+        </h2>
+        <Typography>
+            <p>ガルーンのスケジュールと同期するGoogle Calendarの設定を行います。</p>
+            <p>下のボタンを押すとブラウザが開きます. 認可後に表示されるコードを入力して「次へ」ボタンを押して下さい</p>
+            <Button variant="flat" color="secondary" onClick={props.openAuthorizationView}>
+                認可画面をWebブラウザで開く
+            </Button>
+            <br />
+            <TextField
+                fullWidth
+                name="code"
+                value={props.googleCalendar.authorizationCode}
+                label="認可コード"
+                onChange={(e: React.FormEvent<HTMLInputElement>) => props.setAuthorizationCode(e.currentTarget.value)}
+            />
+            <br />
+            <p>{informationMessage(props)}</p>
+        </Typography>
         <Button variant="raised" style={style} onClick={props.handlePrev}>
             戻る
         </Button>

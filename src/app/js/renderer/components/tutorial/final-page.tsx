@@ -5,6 +5,7 @@ import FormGroup from "@material-ui/core/FormGroup";
 import NotificationSync from "@material-ui/icons/Sync";
 import NotificationSyncDisabled from "@material-ui/icons/SyncDisabled";
 import * as React from "react";
+import { Typography } from "../../../../../../node_modules/@material-ui/core";
 
 export interface ConnectedDispatchProps {
     readonly submit: () => void;
@@ -19,9 +20,13 @@ type Props = ConnectedDispatchProps & ConnectedState;
 
 const FinalPage: React.StatelessComponent<Props> = (props: Props) => (
     <div>
-        <h2>セットアップは以上です！</h2>
-        <p>完了を押すとこのウィンドウは閉じられます</p>
-        <p>macOSではメニューバー、Windowsではタスクバーに格納されます</p>
+        <h2>
+            <Typography variant="headline">セットアップは以上です！</Typography>
+        </h2>
+        <Typography>
+            <p>完了を押すとこのウィンドウは閉じられます</p>
+            <p>macOSではメニューバー、Windowsではタスクバーに格納されます</p>
+        </Typography>
         <FormGroup>
             <FormControlLabel
                 control={

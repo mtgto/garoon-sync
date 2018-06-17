@@ -4,6 +4,7 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
+import Typography from "@material-ui/core/Typography";
 import * as React from "react";
 import { Calendar } from "../../../common/google";
 import * as GoogleCalendar from "../../modules/google-calendar";
@@ -46,11 +47,15 @@ const informationMessage = (props: Props): string => {
  */
 const GoogleCalendarPage = withStyles(styles)((props: Props) => (
     <>
-        <h2>Google Calendarの設定</h2>
-        <p>ガルーンのスケジュールと同期するGoogle Calendarを選択してください。</p>
-        <p>
-            もし新規にカレンダーを作りたい場合はWebブラウザでカレンダー作成してから「カレンダーをリロードする」ボタンを押して下さい
-        </p>
+        <h2>
+            <Typography variant="headline">Google Calendarの設定</Typography>
+        </h2>
+        <Typography>
+            <p>ガルーンのスケジュールと同期するGoogle Calendarを選択してください。</p>
+            <p>
+                もし新規にカレンダーを作りたい場合はWebブラウザでカレンダー作成してから「カレンダーをリロードする」ボタンを押して下さい
+            </p>
+        </Typography>
         <FormControl className={props.classes.formControl}>
             <InputLabel>同期するカレンダー</InputLabel>
             <Select
@@ -69,7 +74,9 @@ const GoogleCalendarPage = withStyles(styles)((props: Props) => (
             カレンダーをリロードする
         </Button>
         <br />
-        <p>{informationMessage(props)}</p>
+        <Typography>
+            <p>{informationMessage(props)}</p>
+        </Typography>
         <Button variant="raised" className={props.classes.button} onClick={props.handlePrev}>
             戻る
         </Button>
