@@ -19,12 +19,12 @@ import setupTutorial from "./tutorial";
  */
 const syncInterval: moment.Duration = moment.duration(30, "minutes");
 
-let timer: NodeJS.Timer | undefined = undefined;
+let timer: NodeJS.Timer | undefined;
 
 /**
  * A datetime of next sync.
  */
-export let reservedDateTime: moment.Moment | undefined = undefined;
+export let reservedDateTime: moment.Moment | undefined;
 
 const alreadyLaunched: boolean = app.makeSingleInstance((argv: string[], workingDirectory: string) => {});
 

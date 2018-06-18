@@ -1,7 +1,7 @@
-import {types} from "garoon";
-import {DateTime, Schedule, fromGaroonSchedule} from "./schedule";
-import {Store} from "./store";
-import {Moment} from "moment-timezone";
+import { types } from "garoon";
+import { fromGaroonSchedule, Schedule } from "./schedule";
+import { DateTime } from "./schedule/datetime";
+import { Store } from "./store";
 
 /**
  * Schedule data structure for nedb.
@@ -24,11 +24,16 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         super(datastorePath);
     }
 
-    getSchedules = (start: DateTime, end: DateTime): Promise<Schedule[]> => {
+    public getSchedules = (start: DateTime, end: DateTime): Promise<Schedule[]> => {
         const schedule: StoredSchedule = {} as StoredSchedule;
-        this.datastore.find<StoredSchedule>({$or: [{"start": {$gte: this.serializeDateTime(start, true)}}, {"end": {$lte: this.serializeDateTime(end, false)}}]});
+        this.datastore.find<StoredSchedule>({
+            $or: [
+                { start: { $gte: this.serializeDateTime(start, true) } },
+                { end: { $lte: this.serializeDateTime(end, false) } },
+            ],
+        });
         return Promise.resolve([]);
-    }
+    };
 
     private serializeDateTime = (dateTime: DateTime, start: boolean): string => {
         if (dateTime.hasTime) {
@@ -38,18 +43,14 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         } else {
             return dateTime.moment.format("YYYY-MM-DD 24:00:00");
         }
-    }
+    };
 
-    serializer = (schedule: Schedule): StoredSchedule => {
-        return {
-            _id: schedule.id,
-            payload: schedule.garoonEvent,
-            start: this.serializeDateTime(schedule.start, true),
-            end: this.serializeDateTime(schedule.end, false)
-        };
-    }
+    public serializer = (schedule: Schedule): StoredSchedule => ({
+        _id: schedule.id,
+        payload: schedule.garoonEvent,
+        start: this.serializeDateTime(schedule.start, true),
+        end: this.serializeDateTime(schedule.end, false),
+    });
 
-    deserializer = (obj: StoredSchedule): Schedule => {
-        return fromGaroonSchedule(obj.payload);
-    }
+    deserializer = (obj: StoredSchedule): Schedule => fromGaroonSchedule(obj.payload);
 }

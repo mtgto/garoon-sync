@@ -1,19 +1,9 @@
 import * as garoon from "garoon";
 import * as moment from "moment-timezone";
 import * as url from "url";
-
-/**
- * タイムゾーン、日時を表す. 時間は省略可能.
- */
-export class DateTime {
-    readonly moment: moment.Moment;
-    readonly hasTime: boolean;
-
-    constructor(moment: moment.Moment, hasTime: boolean = true) {
-        this.moment = moment;
-        this.hasTime = hasTime;
-    }
-}
+import { Attendee } from "./schedule/attendee";
+import { DateTime } from "./schedule/datetime";
+import { Location } from "./schedule/location";
 
 export const enum Visibility {
     Public = "public",
@@ -28,31 +18,6 @@ export const enum Transparency {
 export const enum Status {
     Confirmed = "confirmed", // 確定
     Tentative = "tentative", // 仮
-}
-
-export interface IdValue {
-    readonly id: string;
-    readonly displayName: string;
-}
-
-export class Attendee implements IdValue {
-    readonly id: string;
-    readonly displayName: string;
-
-    constructor(id: string, displayName: string) {
-        this.id = id;
-        this.displayName = displayName;
-    }
-}
-
-export class Location implements IdValue {
-    readonly id: string;
-    readonly displayName: string;
-
-    constructor(id: string, displayName: string) {
-        this.id = id;
-        this.displayName = displayName;
-    }
 }
 
 export interface Source {
@@ -229,7 +194,7 @@ const recurrenceFromRepeatInfo = (
     repeatInfo: garoon.types.schedule.EventTypeRepeatInfo,
     timezone: string,
 ): Recurrences => {
-    let recurrence: Recurrences | undefined = undefined;
+    let recurrence: Recurrences | undefined;
     let until: moment.Moment;
     if (repeatInfo.condition.attributes.end_date) {
         if (repeatInfo.condition.attributes.end_time) {
@@ -397,7 +362,7 @@ const googleRecurrenceFromRecurrence = (start: DateTime, recurrence: Recurrences
     if (!recurrence) {
         return [];
     }
-    let rrules: string[] = [`RRULE:FREQ=${recurrence.pattern}`];
+    const rrules: string[] = [`RRULE:FREQ=${recurrence.pattern}`];
     let exrules: string[] = [];
     if (recurrence.count) {
         rrules.push(`COUNT=${recurrence.count}`);

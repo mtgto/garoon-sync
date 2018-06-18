@@ -155,7 +155,7 @@ ipcMain.on(Constants.VerifyGoogleCalendarAuthorizationCodeSendChannel, (event: E
     googleClient
         .getCredentials(code)
         .then((credentials: Credentials) => {
-            //一度しか取れないからこの時点でディスクに保存しておく? メモリだけにしてチュートリアル終わったときに保存する?
+            // 一度しか取れないからこの時点でディスクに保存しておく? メモリだけにしてチュートリアル終わったときに保存する?
             const message = "Succeeded to retrieve google api access token.";
             log.info(message);
             _credentials = credentials;
