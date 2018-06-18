@@ -22,7 +22,8 @@ export const renderConfig: webpack.Configuration = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: "ts-loader",
+                include: [path.resolve(__dirname, "src/app/js/common"), path.resolve(__dirname, "src/app/js/renderer")],
+                use: ["cache-loader", "ts-loader"],
             },
         ],
     },
@@ -44,7 +45,7 @@ export const mainConfig: webpack.Configuration = {
         filename: "js/main/index.js",
     },
     resolve: {
-        extensions: [".ts", ".tsx", ".js"],
+        extensions: [".ts", ".js"],
     },
     target: "electron-main",
     node: {
@@ -54,10 +55,16 @@ export const mainConfig: webpack.Configuration = {
         rules: [
             {
                 test: /\.ts$/,
-                use: "ts-loader",
+                include: [
+                    path.resolve(__dirname, "src/app/js/common"),
+                    path.resolve(__dirname, "src/app/js/main"),
+                    path.resolve(__dirname, "test/js"),
+                ],
+                use: ["cache-loader", "ts-loader"],
             },
             {
                 test: /\.node$/,
+                include: path.resolve(__dirname, "node_modules"),
                 use: "node-loader",
             },
         ],
