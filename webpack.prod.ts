@@ -1,23 +1,18 @@
-import * as webpack from "webpack";
+import * as UglifyJsPlugin from "uglifyjs-webpack-plugin";
 import * as merge from "webpack-merge";
-import {renderConfig, mainConfig} from "./webpack.common";
-const UglifyPlugin = require("uglifyjs-webpack-plugin");
+import { mainConfig, renderConfig } from "./webpack.common";
 
 export default [
     merge(renderConfig, {
         mode: "production",
         optimization: {
-            minimizer: [
-                new UglifyPlugin()
-            ]
-        }
+            minimizer: [new UglifyJsPlugin()],
+        },
     }),
     merge(mainConfig, {
         mode: "production",
         optimization: {
-            minimizer: [
-                new UglifyPlugin()
-            ]
-        }
-    })
+            minimizer: [new UglifyJsPlugin()],
+        },
+    }),
 ];
