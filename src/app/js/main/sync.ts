@@ -1,14 +1,14 @@
 import * as moment from "moment-timezone";
-import { Action, Dispatch, Reducer } from "redux";
+import { Action, ActionCreator, Reducer } from "redux";
 
 /**
  * Redux Actions, State, Reducer for Synchronizer.
  */
 
-export type Progress = {
-    num: number;
-    den: number;
-}; // (numerator / denominator)
+export interface Progress {
+    readonly num: number;
+    readonly den: number;
+} // (numerator / denominator)
 
 /**
  * Actions
@@ -61,45 +61,35 @@ interface EndSyncAction extends Action {
 /**
  * Action Creators
  */
-export const startFetchGaroon = (): StartFetchGaroonAction => {
-    return {
-        type: ActionTypes.StartFetchGaroon,
-    };
-};
+export const startFetchGaroon: ActionCreator<StartFetchGaroonAction> = (): StartFetchGaroonAction => ({
+    type: ActionTypes.StartFetchGaroon,
+});
 
-export const endFetchGaroon = (result: SyncResult): EndFetchGaroonAction => {
-    return {
-        type: ActionTypes.EndFetchGaroon,
-        payload: result,
-    };
-};
+export const endFetchGaroon: ActionCreator<EndFetchGaroonAction> = (result: SyncResult): EndFetchGaroonAction => ({
+    type: ActionTypes.EndFetchGaroon,
+    payload: result,
+});
 
-export const startSyncGoogleCalendar = (): StartSyncGoogleCalendar => {
-    return {
-        type: ActionTypes.StartSyncGoogleCalendar,
-    };
-};
+export const startSyncGoogleCalendar: ActionCreator<StartSyncGoogleCalendar> = (): StartSyncGoogleCalendar => ({
+    type: ActionTypes.StartSyncGoogleCalendar,
+});
 
-export const endSyncGoogleCalendar = (result: SyncResult): EndSyncGoogleCalendarAction => {
-    return {
-        type: ActionTypes.EndSyncGoogleCalendar,
-        payload: result,
-    };
-};
+export const endSyncGoogleCalendar: ActionCreator<EndSyncGoogleCalendarAction> = (
+    result: SyncResult,
+): EndSyncGoogleCalendarAction => ({
+    type: ActionTypes.EndSyncGoogleCalendar,
+    payload: result,
+});
 
-export const updateProgress = (progress: Progress): UpdateProgressAction => {
-    return {
-        type: ActionTypes.UpdateProgress,
-        payload: progress,
-    };
-};
+export const updateProgress: ActionCreator<UpdateProgressAction> = (progress: Progress): UpdateProgressAction => ({
+    type: ActionTypes.UpdateProgress,
+    payload: progress,
+});
 
-export const endSync = (result: SyncResult): EndSyncAction => {
-    return {
-        type: ActionTypes.EndSync,
-        payload: result,
-    };
-};
+export const endSync: ActionCreator<EndSyncAction> = (result: SyncResult): EndSyncAction => ({
+    type: ActionTypes.EndSync,
+    payload: result,
+});
 
 /**
  * State

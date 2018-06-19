@@ -78,9 +78,13 @@ const stateChange = () => {
             break;
         case SyncState.FetchingGaroon:
             if (!animationTimer) {
-                animationTimer = setInterval(() => {
-                    tray.setImage(animation.nextImage());
-                }, 300);
+                animationTimer = setInterval(
+                    () => {
+                        tray.setImage(animation.nextImage());
+                    },
+                    300,
+                    undefined,
+                ); // @types/node のsetIntervalとして認識されるようにするため
             }
             if (state.syncing.result === SyncResult.Unknown) {
                 tray.setToolTip("ガルーンの予定を取得中...");
