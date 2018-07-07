@@ -1,8 +1,11 @@
 import { IdValue } from "./id_value";
 
+/**
+ * Attendee of the schedule.
+ */
 export class Attendee implements IdValue {
-    readonly id: string;
-    readonly displayName: string;
+    public readonly id: string;
+    public readonly displayName: string;
 
     constructor(id: string, displayName: string) {
         this.id = id;

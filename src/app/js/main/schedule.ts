@@ -105,7 +105,7 @@ export interface Schedule {
     readonly status: Status;
     readonly transparency: Transparency;
     readonly recurrence?: Recurrences;
-    readonly garoonEvent: garoon.types.schedule.EventType;
+    readonly garoonEvent: garoon.schedule.EventType;
 }
 
 export const compare = (left: Schedule, right: Schedule): number => {
@@ -123,11 +123,11 @@ export const compare = (left: Schedule, right: Schedule): number => {
  *
  * @see MemberType https://developer.cybozu.io/hc/ja/articles/202463250#step2
  */
-const userAndFacilityFromMember = (member: garoon.types.schedule.MemberType): Attendee | Location | undefined => {
-    if (member.user && (<any>member.user.attributes).name) {
-        return new Attendee(member.user.attributes.id, (<any>member.user.attributes).name);
-    } else if (member.facility && (<any>member.facility.attributes).name) {
-        return new Location(member.facility.attributes.id, (<any>member.facility.attributes).name);
+const userAndFacilityFromMember = (member: garoon.schedule.MemberType): Attendee | Location | undefined => {
+    if (member.user && member.user.attributes && member.user.attributes) {
+        return new Attendee(member.user.attributes.id, (member.user.attributes as any).name);
+    } else if (member.facility && member.facility.attributes) {
+        return new Location(member.facility.attributes.id, (member.facility.attributes as any).name);
     }
     return undefined;
 };
@@ -135,11 +135,11 @@ const userAndFacilityFromMember = (member: garoon.types.schedule.MemberType): At
 /**
  * Parse members for users or facilities (ignoring ogranizations).
  */
-const usersAndFacilitiesFromMembers = (members: garoon.types.schedule.MemberType[]): [Attendee[], Location[]] => {
+const usersAndFacilitiesFromMembers = (members: garoon.schedule.MemberType[]): [Attendee[], Location[]] => {
     return members.reduce(
         (
             [attendees, locations]: [Attendee[], Location[]],
-            member: garoon.types.schedule.MemberType,
+            member: garoon.schedule.MemberType,
         ): [Attendee[], Location[]] => {
             const parsed = userAndFacilityFromMember(member);
             if (parsed) {
@@ -159,14 +159,14 @@ const usersAndFacilitiesFromMembers = (members: garoon.types.schedule.MemberType
 };
 
 const usersAndFacilitiesFromMemberOrMembers = (
-    members: garoon.types.schedule.EventTypeMembers | undefined,
+    members: garoon.schedule.EventTypeMembers | undefined,
 ): [Attendee[], Location[]] => {
     if (members === undefined) {
         return [[], []];
     } else if (Array.isArray(members.member)) {
         return usersAndFacilitiesFromMembers(members.member);
     } else {
-        return usersAndFacilitiesFromMembers([members.member as garoon.types.schedule.MemberType]);
+        return usersAndFacilitiesFromMembers([members.member as garoon.schedule.MemberType]);
     }
 };
 
@@ -190,10 +190,7 @@ const recurrenceWeeklyPatternFromWeekday = (day: string): RecurrenceWeeklyPatter
     throw new Error(`Invalid input ${day}`);
 };
 
-const recurrenceFromRepeatInfo = (
-    repeatInfo: garoon.types.schedule.EventTypeRepeatInfo,
-    timezone: string,
-): Recurrences => {
+const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInfo, timezone: string): Recurrences => {
     let recurrence: Recurrences | undefined;
     let until: moment.Moment;
     if (repeatInfo.condition.attributes.end_date) {
@@ -212,13 +209,13 @@ const recurrenceFromRepeatInfo = (
         case "day":
             recurrence = {
                 pattern: RecurrencePattern.Daily,
-                until: until,
+                until,
             };
             break;
         case "weekday":
             recurrence = {
                 pattern: RecurrencePattern.Weekly,
-                until: until,
+                until,
                 byday: RecurrenceWeekdayPattern,
             };
             break;
@@ -226,7 +223,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Weekly,
-                    until: until,
+                    until,
                     byday: [recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -235,7 +232,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     byday: [1, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -244,7 +241,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     byday: [2, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -253,7 +250,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     byday: [3, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -262,7 +259,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     byday: [4, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -271,7 +268,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.week) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     byday: [5, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
                 };
             }
@@ -280,7 +277,7 @@ const recurrenceFromRepeatInfo = (
             if (repeatInfo.condition.attributes.day) {
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
-                    until: until,
+                    until,
                     bymonthday: repeatInfo.condition.attributes.day,
                 };
             }
@@ -309,7 +306,7 @@ const recurrenceFromRepeatInfo = (
  *
  * @param publicType https://developer.cybozu.io/hc/ja/articles/202463250#step5
  */
-const visibilityFromPublicType = (publicType: garoon.types.schedule.PublicType): Visibility => {
+const visibilityFromPublicType = (publicType: garoon.schedule.PublicType): Visibility => {
     switch (publicType) {
         case "public":
             return Visibility.Public;
@@ -324,7 +321,7 @@ const visibilityFromPublicType = (publicType: garoon.types.schedule.PublicType):
  *
  * @param eventTypeType https://developer.cybozu.io/hc/ja/articles/202463250#step4
  */
-const statusFromEventTypeType = (eventTypeType: garoon.types.schedule.EventTypeType): Status => {
+const statusFromEventTypeType = (eventTypeType: garoon.schedule.EventTypeType): Status => {
     switch (eventTypeType) {
         case "normal":
         case "repeat":
@@ -394,7 +391,7 @@ const googleRecurrenceFromRecurrence = (start: DateTime, recurrence: Recurrences
     return [rrules.join(";")].concat(exrules);
 };
 
-const transparencyFromEventTypeType = (eventTypeType: garoon.types.schedule.EventTypeType): Transparency => {
+const transparencyFromEventTypeType = (eventTypeType: garoon.schedule.EventTypeType): Transparency => {
     switch (eventTypeType) {
         case "normal":
         case "repeat":
@@ -407,7 +404,7 @@ const transparencyFromEventTypeType = (eventTypeType: garoon.types.schedule.Even
 
 export const fromGaroonSchedule = (json: any): Schedule => {
     // TODO Fix npm garoon's type definition.
-    const event: garoon.types.schedule.EventType = json;
+    const event: garoon.schedule.EventType = json;
     const [users, locations] = usersAndFacilitiesFromMemberOrMembers(event.members);
     const timezone: string = event.attributes.timezone;
     const endTimezone: string = json.attributes.end_timezone || timezone;
@@ -482,14 +479,14 @@ export const fromGaroonSchedule = (json: any): Schedule => {
         version: event.attributes.version,
         summary: event.attributes.detail || "",
         description: event.attributes.description,
-        locations: locations,
+        locations,
         attendees: users,
-        start: start,
-        end: end,
-        visibility: visibility,
+        start,
+        end,
+        visibility,
         status: statusFromEventTypeType(event.attributes.event_type),
         transparency: transparencyFromEventTypeType(event.attributes.event_type),
-        recurrence: recurrence,
+        recurrence,
         garoonEvent: event,
     };
 };

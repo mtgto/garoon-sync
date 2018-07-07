@@ -1,4 +1,4 @@
-import { types } from "garoon";
+import * as garoon from "garoon";
 import { fromGaroonSchedule, Schedule } from "./schedule";
 import { DateTime } from "./schedule/datetime";
 import { Store } from "./store";
@@ -8,7 +8,7 @@ import { Store } from "./store";
  */
 interface StoredSchedule {
     readonly _id: string;
-    readonly payload: types.schedule.EventType;
+    readonly payload: garoon.schedule.EventType;
     readonly start: string;
     readonly end: string;
 }
@@ -25,7 +25,6 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
     }
 
     public getSchedules = (start: DateTime, end: DateTime): Promise<Schedule[]> => {
-        const schedule: StoredSchedule = {} as StoredSchedule;
         this.datastore.find<StoredSchedule>({
             $or: [
                 { start: { $gte: this.serializeDateTime(start, true) } },
@@ -34,6 +33,15 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         });
         return Promise.resolve([]);
     };
+
+    public serializer = (schedule: Schedule): StoredSchedule => ({
+        _id: schedule.id,
+        payload: schedule.garoonEvent,
+        start: this.serializeDateTime(schedule.start, true),
+        end: this.serializeDateTime(schedule.end, false),
+    });
+
+    public deserializer = (obj: StoredSchedule): Schedule => fromGaroonSchedule(obj.payload);
 
     private serializeDateTime = (dateTime: DateTime, start: boolean): string => {
         if (dateTime.hasTime) {
@@ -44,13 +52,4 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
             return dateTime.moment.format("YYYY-MM-DD 24:00:00");
         }
     };
-
-    public serializer = (schedule: Schedule): StoredSchedule => ({
-        _id: schedule.id,
-        payload: schedule.garoonEvent,
-        start: this.serializeDateTime(schedule.start, true),
-        end: this.serializeDateTime(schedule.end, false),
-    });
-
-    deserializer = (obj: StoredSchedule): Schedule => fromGaroonSchedule(obj.payload);
 }

@@ -5,7 +5,7 @@ import FormGroup from "@material-ui/core/FormGroup";
 import NotificationSync from "@material-ui/icons/Sync";
 import NotificationSyncDisabled from "@material-ui/icons/SyncDisabled";
 import * as React from "react";
-import { Typography } from "../../../../../../node_modules/@material-ui/core";
+import { Typography } from "@material-ui/core";
 
 export interface ConnectedDispatchProps {
     readonly submit: () => void;

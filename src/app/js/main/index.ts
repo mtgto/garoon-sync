@@ -7,9 +7,8 @@ import config from "./config";
 import garoon from "./garoon";
 import google from "./google";
 import log from "./log";
-import { toGoogleCalendarEvent } from "./schedule";
+import reducer, { State as SyncState, SyncState as SyncingState } from "./modules/sync";
 import { ScheduleStore } from "./schedule-store";
-import reducer, { State as SyncState, SyncState as SyncingState } from "./sync";
 import synchronizer from "./synchronizer";
 import setupTray from "./tray";
 import setupTutorial from "./tutorial";
@@ -26,7 +25,9 @@ let timer: NodeJS.Timer | undefined;
  */
 export let reservedDateTime: moment.Moment | undefined;
 
-const alreadyLaunched: boolean = app.makeSingleInstance((argv: string[], workingDirectory: string) => {});
+const alreadyLaunched: boolean = app.makeSingleInstance((argv: string[], workingDirectory: string) => {
+    // do nothing
+});
 
 if (alreadyLaunched) {
     log.info("Already app launched. quit.");

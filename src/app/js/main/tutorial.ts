@@ -1,20 +1,23 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import * as path from "path";
 import * as url from "url";
+import { startSync } from ".";
 import * as Constants from "../common/constants";
 import { GaroonAccount } from "../common/garoon";
-import { CalendarId } from "../common/google";
-import { startSync } from "./";
 import config from "./config";
 import garoonClient from "./garoon";
 import googleClient, { Credentials } from "./google";
 import log from "./log";
 import setupTray from "./tray";
 
+/**
+ * Tutorial window
+ */
+
 let tutorialWindow: Electron.BrowserWindow | undefined;
-let _credentials: Credentials | undefined;
-let _garoonAccount: GaroonAccount | undefined;
-let _eventPageUrl: string | undefined;
+let globalCredentials: Credentials | undefined;
+let globalGaroonAccount: GaroonAccount | undefined;
+let globalEventPageUrl: string | undefined;
 let tutorialFinished: boolean = false;
 
 const fontFamilies: {
@@ -119,8 +122,8 @@ ipcMain.once(Constants.SetInitialDataSendChannel, (event: Electron.Event) => {
     const garoonUrl: string | undefined = process.env.GAROON_URL;
     const garoonEventPageUrl: string | undefined = process.env.GAROON_EVENT_PAGE_URL;
     const initialData: Constants.SetInitialDataResponseType = {
-        garoonUrl: garoonUrl,
-        garoonEventPageUrl: garoonEventPageUrl,
+        garoonUrl,
+        garoonEventPageUrl,
     };
     event.sender.send(Constants.SetInitialDataResponseChannel, initialData);
 });
@@ -131,7 +134,7 @@ ipcMain.on(Constants.VerifyGaroonAccountSendChannel, (event: Electron.Event, acc
         .getLoginUserId()
         .then(response => {
             log.info("Succeeded to retrieve garoon login user id");
-            _garoonAccount = account;
+            globalGaroonAccount = account;
             event.sender.send(Constants.VerifyGaroonAccountResposeChannel, true);
         })
         .catch(error => {
@@ -143,7 +146,7 @@ ipcMain.on(Constants.VerifyGaroonAccountSendChannel, (event: Electron.Event, acc
 ipcMain.on(
     Constants.SetGaroonEventPageUrlSendChannel,
     (event: Electron.Event, eventPageUrl: Constants.SetGaroonEventPageUrlSendType) => {
-        _eventPageUrl = eventPageUrl;
+        globalEventPageUrl = eventPageUrl;
     },
 );
 
@@ -158,7 +161,7 @@ ipcMain.on(Constants.VerifyGoogleCalendarAuthorizationCodeSendChannel, (event: E
             // 一度しか取れないからこの時点でディスクに保存しておく? メモリだけにしてチュートリアル終わったときに保存する?
             const message = "Succeeded to retrieve google api access token.";
             log.info(message);
-            _credentials = credentials;
+            globalCredentials = credentials;
             googleClient.setCredentials(credentials);
             event.sender.send(Constants.VerifyGoogleCalendarAuthorizationCodeResponseChannel, true);
         })
@@ -192,15 +195,15 @@ ipcMain.once(
         startSyncAfterTutorial: Constants.FinishTutorialSendType2,
     ) => {
         // 設定の永続化
-        if (!_garoonAccount || !_credentials || !_eventPageUrl) {
+        if (!globalGaroonAccount || !globalCredentials || !globalEventPageUrl) {
             const message = "Tutorial ended with illegal state.";
             log.error("Tutorial ended with illegal state.");
             throw new Error(message);
         }
-        config.setGaroonConfig(_garoonAccount, _eventPageUrl);
-        config.setgoogleConfig(_credentials, calendarId);
-        _garoonAccount = undefined;
-        _credentials = undefined;
+        config.setGaroonConfig(globalGaroonAccount, globalEventPageUrl);
+        config.setgoogleConfig(globalCredentials, calendarId);
+        globalGaroonAccount = undefined;
+        globalCredentials = undefined;
         config.save();
         tutorialFinished = true;
         if (tutorialWindow) {

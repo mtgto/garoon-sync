@@ -1,11 +1,11 @@
 import { Moment } from "moment";
 
 /**
- * タイムゾーン、日時を表す. 時間は省略可能.
+ * DateTime or Date include timezone.
  */
 export class DateTime {
-    readonly moment: Moment;
-    readonly hasTime: boolean;
+    public readonly moment: Moment;
+    public readonly hasTime: boolean;
 
     constructor(moment: Moment, hasTime: boolean = true) {
         this.moment = moment;

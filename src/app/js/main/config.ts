@@ -43,7 +43,7 @@ interface GoogleConfig extends GoogleConfigWithoutSecret {
  * @todo refactor name of methods (congestion of setter/getter and getXXX, setXXX)
  */
 class Config {
-    readonly version: number = 1;
+    public readonly version: number = 1;
     private store: ElectronStore;
     private garoon?: GaroonConfig;
     private google?: GoogleConfig;
@@ -66,18 +66,18 @@ class Config {
         }
     }
 
-    setGaroonConfig = (garoonAccount: GaroonAccount | undefined, eventPageUrl: string) => {
+    public setGaroonConfig = (garoonAccount: GaroonAccount | undefined, eventPageUrl: string) => {
         if (garoonAccount) {
             this.garoon = {
                 serverUrl: garoonAccount.serverUrl,
                 username: garoonAccount.username,
                 password: garoonAccount.password,
-                eventPageUrl: eventPageUrl,
+                eventPageUrl,
             };
         }
     };
 
-    getGaroonEventPageUrl = (): url.URL | undefined => {
+    public getGaroonEventPageUrl = (): url.URL | undefined => {
         if (this.garoon) {
             return new url.URL(this.garoon.eventPageUrl);
         }
@@ -93,40 +93,40 @@ class Config {
         }
     }
 
-    setgoogleConfig = (credentials: GoogleCredentials, calendarId: string) => {
+    public setgoogleConfig = (credentials: GoogleCredentials, calendarId: string) => {
         if (credentials) {
             this.google = {
                 accessTokenGenerated: true,
                 accessToken: credentials.access_token,
                 refreshToken: credentials.refresh_token,
                 expiryDate: credentials.expiry_date,
-                calendarId: calendarId,
+                calendarId,
             };
         }
     };
 
-    getGoogleCalendarId = (): string | undefined => {
+    public getGoogleCalendarId = (): string | undefined => {
         return this.google ? this.google.calendarId : undefined;
     };
 
-    save = (): void => {
+    public save = (): void => {
         this.store.set(CONFIG_VERSION_NAME, this.version);
         if (this.garoon) {
-            const config: GaroonConfigWithoutSecret = {
+            const garoonConfig: GaroonConfigWithoutSecret = {
                 serverUrl: this.garoon.serverUrl,
                 username: this.garoon.username,
                 eventPageUrl: this.garoon.eventPageUrl,
             };
-            this.store.set(GAROON_CONFIG_NAME, config);
+            this.store.set(GAROON_CONFIG_NAME, garoonConfig);
             keytar.setPassword(GAROON_KEYTAR_SERVICE_NAME, this.garoon.username, this.garoon.password);
         }
         if (this.google) {
-            const config: GoogleConfigWithoutSecret = {
+            const googleConfig: GoogleConfigWithoutSecret = {
                 calendarId: this.google.calendarId,
                 accessTokenGenerated: this.google.accessTokenGenerated,
                 expiryDate: this.google.expiryDate,
             };
-            this.store.set(GOOGLE_CONFIG_NAME, config);
+            this.store.set(GOOGLE_CONFIG_NAME, googleConfig);
             keytar.setPassword(
                 GOOGLE_KEYTAR_SERVICE_NAME,
                 GOOGLE_KEYTAR_ACCESS_TOKEN_ACCOUNT_NAME,
@@ -140,7 +140,7 @@ class Config {
         }
     };
 
-    load = async (): Promise<void> => {
+    public load = async (): Promise<void> => {
         const version = this.store.get(CONFIG_VERSION_NAME);
         if (version && typeof version === "number") {
             if (this.version !== version) {
@@ -156,7 +156,7 @@ class Config {
                     serverUrl: garoon.serverUrl,
                     username: garoon.username,
                     eventPageUrl: garoon.eventPageUrl,
-                    password: password,
+                    password,
                 };
             }
         }

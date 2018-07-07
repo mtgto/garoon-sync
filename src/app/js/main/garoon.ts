@@ -12,7 +12,7 @@ enum AuthMode {
 
 class GaroonClient {
     private readonly authMode: AuthMode;
-    private garoonClient?: garoon.Client;
+    private garoonClient!: garoon.Client;
     private account!: GaroonAccount;
     private sessionId: string | undefined = undefined;
 
@@ -20,7 +20,7 @@ class GaroonClient {
         this.authMode = authMode;
     }
 
-    setAccount = (account: GaroonAccount): void => {
+    public setAccount = (account: GaroonAccount): void => {
         const serverUrl: url.Url = url.parse(account.serverUrl);
         serverUrl.search = "WSDL";
         this.garoonClient = new garoon.Client({ url: url.format(serverUrl) });
@@ -30,17 +30,16 @@ class GaroonClient {
         this.account = account;
     };
 
-    login = async (): Promise<void> => {
+    public login = async (): Promise<void> => {
         if (this.garoonClient) {
-            const client = this.garoonClient;
             return this.garoonClient
                 .UtilLogin({ login_name: this.account.username, password: this.account.password })
-                .then((response: garoon.types.util_api.UtilLoginResponseType) => {
+                .then((response: garoon.util_api.UtilLoginResponseType) => {
                     if (response.cookie) {
                         const cookies = cookie.parse(response.cookie);
                         for (const headerName of Object.keys(cookies)) {
                             if (headerName === "CBSESSID" || headerName === "JSESSIONID") {
-                                client.setSession(headerName, cookies[headerName]);
+                                this.garoonClient.setSession(headerName, cookies[headerName]);
                                 return Promise.resolve();
                             }
                         }
@@ -56,7 +55,7 @@ class GaroonClient {
         }
     };
 
-    getLoginUserId = async (): Promise<garoon.types.util_api.UtilGetLoginUserIdResponseType> => {
+    public getLoginUserId = async (): Promise<garoon.util_api.UtilGetLoginUserIdResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
                 await this.login();
@@ -69,7 +68,7 @@ class GaroonClient {
         }
     };
 
-    getUsersByIds = async (userIds: string[]): Promise<garoon.types.base.BaseGetUsersByIdResponseType> => {
+    public getUsersByIds = async (userIds: string[]): Promise<garoon.base.BaseGetUsersByIdResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
                 await this.login();
@@ -82,7 +81,7 @@ class GaroonClient {
         }
     };
 
-    getEventById = async (eventId: string): Promise<garoon.types.schedule.ScheduleGetEventsByIdResponseType> => {
+    public getEventById = async (eventId: string): Promise<garoon.schedule.ScheduleGetEventsByIdResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
                 await this.login();
@@ -95,16 +94,16 @@ class GaroonClient {
         }
     };
 
-    getEvents = async (
+    public getEvents = async (
         start: moment.Moment,
         end: moment.Moment,
         includeDailyEvents: boolean,
-    ): Promise<garoon.types.schedule.ScheduleGetEventsResponseType> => {
+    ): Promise<garoon.schedule.ScheduleGetEventsResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
                 await this.login();
             }
-            let parameters: garoon.types.schedule.ScheduleGetEventsRequestType = {
+            let parameters: garoon.schedule.ScheduleGetEventsRequestType = {
                 attributes: { start: start.toISOString(), end: end.toISOString() },
             };
             if (includeDailyEvents) {
@@ -125,7 +124,7 @@ class GaroonClient {
         }
     };
 
-    getApplicationInformation = async (): Promise<garoon.types.base.BaseGetApplicationInformationResponseType> => {
+    public getApplicationInformation = async (): Promise<garoon.base.BaseGetApplicationInformationResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
                 await this.login();

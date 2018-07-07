@@ -15,11 +15,9 @@ export abstract class Store<Id, Entity extends { id: Id }, Serialized extends { 
      * @param datastorePath If datastorePath is undefined, create in memory database (for unit test).
      */
     constructor(datastorePath?: string) {
-        if (datastorePath) {
-            this.datastore = new Datastore({ filename: datastorePath, autoload: true });
-        } else {
-            this.datastore = new Datastore({ inMemoryOnly: true, autoload: true });
-        }
+        this.datastore = datastorePath
+            ? new Datastore({ filename: datastorePath, autoload: true })
+            : new Datastore({ inMemoryOnly: true, autoload: true });
     }
 
     public readonly get = async (

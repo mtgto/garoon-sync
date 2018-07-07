@@ -69,7 +69,7 @@ class GoogleClient {
      *
      * After authorized, browser prints a code (to retrieve access token).
      */
-    generateAuthUrl = (): string => {
+    public generateAuthUrl = (): string => {
         return this.oauth2Client.generateAuthUrl({
             access_type: "offline",
             scope: ["https://www.googleapis.com/auth/calendar"],
@@ -79,7 +79,7 @@ class GoogleClient {
     /**
      * Get access token by using one time code.
      */
-    getCredentials = async (code: string): Promise<Credentials> => {
+    public getCredentials = async (code: string): Promise<Credentials> => {
         return new Promise<Credentials>((resolve, reject) => {
             this.oauth2Client.getToken(code, (err: any, credentials: Credentials) => {
                 if (err) {
@@ -94,14 +94,14 @@ class GoogleClient {
         });
     };
 
-    setCredentials = (credentials: Credentials): void => {
+    public setCredentials = (credentials: Credentials): void => {
         this.oauth2Client.credentials = credentials;
     };
 
     /**
      * Returns writable Google Calendar list.
      */
-    getWritableCalendars = async (calendars: Calendar[] = [], pageToken?: string): Promise<Calendar[]> => {
+    public getWritableCalendars = async (calendars: Calendar[] = [], pageToken?: string): Promise<Calendar[]> => {
         const calendar: any = google.calendar("v3");
         return new Promise<Calendar[]>((resolve, reject) => {
             let parameters: CalendarListParameters = {
@@ -110,7 +110,7 @@ class GoogleClient {
                 minAccessRole: "owner",
             };
             if (pageToken) {
-                parameters = { ...parameters, pageToken: pageToken };
+                parameters = { ...parameters, pageToken };
             }
             calendar.calendarList.list(parameters, (err: any, response: any) => {
                 if (err) {
@@ -122,8 +122,8 @@ class GoogleClient {
                     calendars = calendars.concat(
                         items.map<Calendar>(item => {
                             return {
-                                id: item["id"],
-                                summary: item["summary"],
+                                id: item.id,
+                                summary: item.summary,
                             };
                         }),
                     );
@@ -138,34 +138,34 @@ class GoogleClient {
         });
     };
 
-    createErrorResponse = (message: string, err: any): GoogleCalendarApiErrorResponse => {
+    public createErrorResponse = (message: string, err: any): GoogleCalendarApiErrorResponse => {
         if (err.code) {
             if (err.code === 404) {
                 return {
-                    message: message,
+                    message,
                     reason: GoogleCalendarApiErrorReason.NotFound,
                     payload: err,
                 };
             } else if (err.code === 409) {
                 return {
-                    message: message,
+                    message,
                     reason: GoogleCalendarApiErrorReason.AlreadyExists,
                     payload: err,
                 };
             }
         }
         return {
-            message: message,
+            message,
             reason: GoogleCalendarApiErrorReason.Unknown,
             payload: err,
         };
     };
 
-    insertEvent = async (calendarId: string, event: any): Promise<any> => {
+    public insertEvent = async (calendarId: string, event: any): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
             auth: this.oauth2Client,
-            calendarId: calendarId,
+            calendarId,
             resource: event,
         };
         return new Promise<void>((resolve, reject) => {
@@ -181,11 +181,11 @@ class GoogleClient {
         });
     };
 
-    updateEvent = async (calendarId: string, event: any): Promise<any> => {
+    public updateEvent = async (calendarId: string, event: any): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
             auth: this.oauth2Client,
-            calendarId: calendarId,
+            calendarId,
             eventId: event.id,
             resource: event,
         };
@@ -202,12 +202,12 @@ class GoogleClient {
         });
     };
 
-    deleteEvent = async (calendarId: string, eventId: string): Promise<any> => {
+    public deleteEvent = async (calendarId: string, eventId: string): Promise<any> => {
         const calendar: any = google.calendar("v3");
         const parameters: any = {
             auth: this.oauth2Client,
-            calendarId: calendarId,
-            eventId: eventId,
+            calendarId,
+            eventId,
         };
         return new Promise<void>((resolve, reject) => {
             calendar.events.delete(parameters, (err: any, response: any) => {

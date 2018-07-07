@@ -1,9 +1,8 @@
 import { app, Menu, nativeImage, shell, Tray } from "electron";
-import * as moment from "moment";
 import * as path from "path";
-import { Store, Unsubscribe } from "redux";
-import { reservedDateTime, startSync, syncStateStore } from "./";
-import { State, SyncResult, SyncState } from "./sync";
+import { Unsubscribe } from "redux";
+import { reservedDateTime, startSync, syncStateStore } from ".";
+import { State, SyncResult, SyncState } from "./modules/sync";
 import synchronizer from "./synchronizer";
 
 class Animation {
@@ -78,13 +77,9 @@ const stateChange = () => {
             break;
         case SyncState.FetchingGaroon:
             if (!animationTimer) {
-                animationTimer = setInterval(
-                    () => {
-                        tray.setImage(animation.nextImage());
-                    },
-                    300,
-                    undefined,
-                ); // @types/node のsetIntervalとして認識されるようにするため
+                animationTimer = global.setInterval(() => {
+                    tray.setImage(animation.nextImage());
+                }, 300);
             }
             if (state.syncing.result === SyncResult.Unknown) {
                 tray.setToolTip("ガルーンの予定を取得中...");
