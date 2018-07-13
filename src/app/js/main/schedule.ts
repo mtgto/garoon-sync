@@ -170,24 +170,24 @@ const usersAndFacilitiesFromMemberOrMembers = (
     }
 };
 
-const recurrenceWeeklyPatternFromWeekday = (day: string): RecurrenceWeeklyPattern => {
+const recurrenceWeeklyPatternFromWeekday = (day: number | undefined): RecurrenceWeeklyPattern => {
     switch (day) {
-        case "0":
+        case 0:
             return RecurrenceWeeklyPattern.Sunday;
-        case "1":
+        case 1:
             return RecurrenceWeeklyPattern.Monday;
-        case "2":
+        case 2:
             return RecurrenceWeeklyPattern.Tuesday;
-        case "3":
+        case 3:
             return RecurrenceWeeklyPattern.Wednesday;
-        case "4":
+        case 4:
             return RecurrenceWeeklyPattern.Thursday;
-        case "5":
+        case 5:
             return RecurrenceWeeklyPattern.Friday;
-        case "6":
+        case 6:
             return RecurrenceWeeklyPattern.Saturday;
     }
-    throw new Error(`Invalid input ${day}`);
+    throw new Error(`Invalid input ${day} of recurrence day.`);
 };
 
 const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInfo, timezone: string): Recurrences => {
@@ -224,7 +224,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Weekly,
                     until,
-                    byday: [recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
@@ -233,7 +233,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
                     until,
-                    byday: [1, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [1, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
@@ -242,7 +242,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
                     until,
-                    byday: [2, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [2, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
@@ -251,7 +251,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
                     until,
-                    byday: [3, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [3, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
@@ -260,7 +260,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
                     until,
-                    byday: [4, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [4, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
@@ -269,7 +269,7 @@ const recurrenceFromRepeatInfo = (repeatInfo: garoon.schedule.EventTypeRepeatInf
                 recurrence = {
                     pattern: RecurrencePattern.Monthly,
                     until,
-                    byday: [5, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week.toString())],
+                    byday: [5, recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
                 };
             }
             break;
