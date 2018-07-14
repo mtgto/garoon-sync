@@ -16,7 +16,7 @@ import {
     SyncResult,
     updateProgress,
 } from "./modules/sync";
-import { fromGaroonSchedule, Schedule, toGoogleCalendarEvent } from "./schedule";
+import { Schedule } from "./schedule";
 import { ScheduleStore } from "./schedule-store";
 
 type BaseGetUsersByIdResponseType = garoon.base.BaseGetUsersByIdResponseType;
@@ -75,7 +75,7 @@ class Synchronizer {
                 return promise.then(async () => {
                     log.info(`Start to sync schedule ID ${schedule.id} to google calendar.`);
                     const scheduleFromStore: Schedule | undefined = await scheduleStore.get(schedule.id);
-                    const json: any = toGoogleCalendarEvent(schedule, garoonEventPageUrl);
+                    const json: any = schedule.toGoogleCalendarEvent(garoonEventPageUrl);
                     // console.log(JSON.stringify(json));
                     let needToStore: boolean = false;
                     if (!scheduleFromStore) {
@@ -174,9 +174,11 @@ class Synchronizer {
             .then(response => {
                 if (response.schedule_event) {
                     if (Array.isArray(response.schedule_event)) {
-                        return Promise.resolve(response.schedule_event.map(event => fromGaroonSchedule(event)));
+                        return Promise.resolve(
+                            response.schedule_event.map(event => Schedule.fromGaroonSchedule(event)),
+                        );
                     } else {
-                        return Promise.resolve([fromGaroonSchedule(response.schedule_event)]);
+                        return Promise.resolve([Schedule.fromGaroonSchedule(response.schedule_event)]);
                     }
                 } else {
                     return Promise.resolve([]);

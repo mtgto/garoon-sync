@@ -2,12 +2,10 @@ import test from "ava";
 import * as moment from "moment-timezone";
 import * as url from "url";
 import {
-    fromGaroonSchedule,
     RecurrenceDaily,
     RecurrencePattern,
     Schedule,
     Status,
-    toGoogleCalendarEvent,
     Transparency,
     Visibility,
 } from "../../../app/js/main/schedule";
@@ -73,8 +71,16 @@ test("schedule can parse a recurrence event which has exclusive datetimes.", asy
             },
         },
     };
-    const scheduleFromJson = fromGaroonSchedule(json["schedule_event"]);
-    const schedule: Schedule = {
+    const scheduleFromJson = Schedule.fromGaroonSchedule(json.schedule_event);
+    const recurrence: RecurrenceDaily = {
+        exclusiveDates: [
+            moment.tz("2017-09-08T00:00:00+09:00", "Asia/Tokyo"),
+            moment.tz("2017-09-09T00:00:00+09:00", "Asia/Tokyo"),
+        ],
+        pattern: RecurrencePattern.Daily,
+        until: moment.tz("2017-09-10 00:30:00", "Asia/Tokyo"),
+    };
+    const schedule: Schedule = new Schedule({
         id: "1234",
         version: "1504772224",
         summary: "繰り返し予定のテスト",
@@ -86,16 +92,9 @@ test("schedule can parse a recurrence event which has exclusive datetimes.", asy
         visibility: Visibility.Private,
         status: Status.Confirmed,
         transparency: Transparency.Opaque,
-        recurrence: {
-            exclusiveDates: [
-                moment.tz("2017-09-08T00:00:00+09:00", "Asia/Tokyo"),
-                moment.tz("2017-09-09T00:00:00+09:00", "Asia/Tokyo"),
-            ],
-            pattern: RecurrencePattern.Daily,
-            until: moment.tz("2017-09-10 00:30:00", "Asia/Tokyo"),
-        } as RecurrenceDaily,
-        garoonEvent: json["schedule_event"],
-    };
+        recurrence,
+        garoonEvent: json.schedule_event,
+    });
     t.deepEqual(scheduleFromJson, schedule);
 });
 
@@ -156,8 +155,8 @@ test("schedule which has exclusive datetime can be converted into a google calen
             },
         },
     };
-    const schedule: Schedule = fromGaroonSchedule(json["schedule_event"]);
-    const googleCalendarEvent = toGoogleCalendarEvent(schedule, garoonUrl);
+    const schedule: Schedule = Schedule.fromGaroonSchedule(json.schedule_event);
+    const googleCalendarEvent = schedule.toGoogleCalendarEvent(garoonUrl);
     const expected = {
         id: "1234",
         summary: "繰り返し予定のテスト",

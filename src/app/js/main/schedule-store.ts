@@ -1,5 +1,5 @@
 import * as garoon from "garoon";
-import { fromGaroonSchedule, Schedule } from "./schedule";
+import { Schedule } from "./schedule";
 import { DateTime } from "./schedule/datetime";
 import { Store } from "./store";
 
@@ -41,7 +41,7 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         end: this.serializeDateTime(schedule.end, false),
     });
 
-    public deserializer = (obj: StoredSchedule): Schedule => fromGaroonSchedule(obj.payload);
+    public deserializer = (obj: StoredSchedule): Schedule => Schedule.fromGaroonSchedule(obj.payload);
 
     private serializeDateTime = (dateTime: DateTime, start: boolean): string => {
         if (dateTime.hasTime) {

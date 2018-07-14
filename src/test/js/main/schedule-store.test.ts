@@ -77,8 +77,13 @@ test("schedule store can store and load schedules", async t => {
         },
     };
     const id = "123";
-    let schedule: Schedule = {
-        id: id,
+    const recurrence: RecurrenceWeekly = {
+        pattern: RecurrencePattern.Weekly,
+        until: moment.tz("2018-04-01 15:00:00", "Asia/Tokyo"),
+        byday: [RecurrenceWeeklyPattern.Friday],
+    };
+    const schedule: Schedule = new Schedule({
+        id,
         version: "1490851642",
         summary: "スケジュールタイトル",
         description: "スケジュールの説明",
@@ -89,13 +94,9 @@ test("schedule store can store and load schedules", async t => {
         visibility: Visibility.Public,
         status: Status.Confirmed,
         transparency: Transparency.Opaque,
-        recurrence: {
-            pattern: RecurrencePattern.Weekly,
-            until: moment.tz("2018-04-01 15:00:00", "Asia/Tokyo"),
-            byday: [RecurrenceWeeklyPattern.Friday],
-        } as RecurrenceWeekly,
-        garoonEvent: json["schedule_event"],
-    };
+        recurrence,
+        garoonEvent: json.schedule_event,
+    });
     // Before store, there is no user in store.
     t.falsy(await store.get(id));
     // Store
