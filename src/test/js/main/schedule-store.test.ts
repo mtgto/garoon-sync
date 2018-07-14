@@ -1,18 +1,12 @@
 import test from "ava";
 import * as moment from "moment-timezone";
-import {
-    RecurrencePattern,
-    RecurrenceWeekly,
-    RecurrenceWeeklyPattern,
-    Schedule,
-    Status,
-    Transparency,
-    Visibility,
-} from "../../../app/js/main/schedule";
+import { Schedule, Status, Transparency, Visibility } from "../../../app/js/main/schedule";
 import { ScheduleStore } from "../../../app/js/main/schedule-store";
 import { Attendee } from "../../../app/js/main/schedule/attendee";
 import { DateTime } from "../../../app/js/main/schedule/datetime";
 import { Location } from "../../../app/js/main/schedule/location";
+import { RecurrenceWeeklyPattern } from "../../../app/js/main/schedule/recurrence";
+import { RecurrenceWeekly } from "../../../app/js/main/schedule/recurrence/weekly";
 
 test("schedule store can store and load schedules", async t => {
     const store = new ScheduleStore();
@@ -77,11 +71,11 @@ test("schedule store can store and load schedules", async t => {
         },
     };
     const id = "123";
-    const recurrence: RecurrenceWeekly = {
-        pattern: RecurrencePattern.Weekly,
-        until: moment.tz("2018-04-01 15:00:00", "Asia/Tokyo"),
-        byday: [RecurrenceWeeklyPattern.Friday],
-    };
+    const recurrence: RecurrenceWeekly = new RecurrenceWeekly(
+        moment.tz("2018-04-01 15:00:00", "Asia/Tokyo"),
+        [],
+        [RecurrenceWeeklyPattern.Friday],
+    );
     const schedule: Schedule = new Schedule({
         id,
         version: "1490851642",

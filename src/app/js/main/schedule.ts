@@ -4,6 +4,7 @@ import * as url from "url";
 import { Attendee } from "./schedule/attendee";
 import { DateTime } from "./schedule/datetime";
 import { Location } from "./schedule/location";
+import { Recurrence } from "./schedule/recurrence";
 
 export const enum Visibility {
     Public = "public",
@@ -23,58 +24,6 @@ export const enum Status {
 export interface Source {
     title: string;
     url: string;
-}
-
-export const enum RecurrencePattern {
-    Daily = "DAILY",
-    Weekly = "WEEKLY",
-    Monthly = "MONTHLY",
-}
-
-export const enum RecurrenceWeeklyPattern {
-    Sunday = "SU",
-    Monday = "MO",
-    Tuesday = "TU",
-    Wednesday = "WE",
-    Thursday = "TH",
-    Friday = "FR",
-    Saturday = "SA",
-}
-
-const RecurrenceWeekdayPattern: RecurrenceWeeklyPattern[] = [
-    RecurrenceWeeklyPattern.Monday,
-    RecurrenceWeeklyPattern.Tuesday,
-    RecurrenceWeeklyPattern.Wednesday,
-    RecurrenceWeeklyPattern.Thursday,
-    RecurrenceWeeklyPattern.Friday,
-];
-
-type Recurrences = RecurrenceDaily | RecurrenceWeekly | RecurrenceMonthly;
-
-/**
- * @todo Change exclusiveDates to readonly (See recurrenceFromRepeatInfo function).
- */
-export interface Recurrence {
-    readonly pattern: RecurrencePattern;
-    readonly interval?: number;
-    readonly count?: number;
-    readonly until?: moment.Moment;
-    exclusiveDates?: moment.Moment[]; // start date
-}
-
-export interface RecurrenceDaily extends Recurrence {
-    readonly pattern: RecurrencePattern.Daily;
-}
-
-export interface RecurrenceWeekly extends Recurrence {
-    readonly pattern: RecurrencePattern.Weekly;
-    readonly byday?: RecurrenceWeeklyPattern[];
-}
-
-export interface RecurrenceMonthly extends Recurrence {
-    readonly pattern: RecurrencePattern.Monthly;
-    readonly bymonthday?: number;
-    readonly byday?: [number, RecurrenceWeeklyPattern];
 }
 
 /**
@@ -97,7 +46,7 @@ export class Schedule {
         const [users, locations] = Schedule.usersAndFacilitiesFromMemberOrMembers(event.members);
         const timezone: string = event.attributes.timezone;
         const endTimezone: string = event.attributes.end_timezone || timezone;
-        let recurrence: Recurrences | undefined;
+        let recurrence: Recurrence | undefined;
         const visibility: Visibility = event.attributes.public_type
             ? Schedule.visibilityFromPublicType(event.attributes.public_type)
             : Visibility.Public;
@@ -105,7 +54,7 @@ export class Schedule {
         // For a recurrence event, this is the end time of the first instance.
         let end: DateTime;
         if (event.repeat_info) {
-            recurrence = Schedule.recurrenceFromRepeatInfo(event.repeat_info, timezone);
+            recurrence = Recurrence.recurrenceFromRepeatInfo(event.repeat_info, timezone);
             // todo 終了日が開始日と同じならend_time, end_dateは省略されるのか？
             // todo ためす: 終了時間が開始時間と同じ、終了時間が-:00、終了時間が24:00
             if (event.repeat_info.condition.attributes.start_time) {
@@ -269,140 +218,6 @@ export class Schedule {
         }
     };
 
-    private static recurrenceWeeklyPatternFromWeekday = (day: number | undefined): RecurrenceWeeklyPattern => {
-        switch (day) {
-            case 0:
-                return RecurrenceWeeklyPattern.Sunday;
-            case 1:
-                return RecurrenceWeeklyPattern.Monday;
-            case 2:
-                return RecurrenceWeeklyPattern.Tuesday;
-            case 3:
-                return RecurrenceWeeklyPattern.Wednesday;
-            case 4:
-                return RecurrenceWeeklyPattern.Thursday;
-            case 5:
-                return RecurrenceWeeklyPattern.Friday;
-            case 6:
-                return RecurrenceWeeklyPattern.Saturday;
-        }
-        throw new Error(`Invalid input ${day} of recurrence day.`);
-    };
-
-    private static recurrenceFromRepeatInfo = (
-        repeatInfo: garoon.schedule.EventTypeRepeatInfo,
-        timezone: string,
-    ): Recurrences => {
-        let recurrence: Recurrences | undefined;
-        let until: moment.Moment;
-        if (repeatInfo.condition.attributes.end_date) {
-            if (repeatInfo.condition.attributes.end_time) {
-                until = moment.tz(
-                    `${repeatInfo.condition.attributes.end_date} ${repeatInfo.condition.attributes.end_time}`,
-                    timezone,
-                );
-            } else {
-                until = moment.tz(repeatInfo.condition.attributes.end_date, timezone);
-            }
-        } else {
-            throw new Error("End time is not defined in recurrence schedule.");
-        }
-        switch (repeatInfo.condition.attributes.type) {
-            case "day":
-                recurrence = {
-                    pattern: RecurrencePattern.Daily,
-                    until,
-                };
-                break;
-            case "weekday":
-                recurrence = {
-                    pattern: RecurrencePattern.Weekly,
-                    until,
-                    byday: RecurrenceWeekdayPattern,
-                };
-                break;
-            case "week":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Weekly,
-                        until,
-                        byday: [Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "1stweek":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        byday: [1, Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "2ndweek":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        byday: [2, Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "3rdweek":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        byday: [3, Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "4thweek":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        byday: [4, Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "lastweek":
-                if (repeatInfo.condition.attributes.week) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        byday: [5, Schedule.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week)],
-                    };
-                }
-                break;
-            case "month":
-                if (repeatInfo.condition.attributes.day) {
-                    recurrence = {
-                        pattern: RecurrencePattern.Monthly,
-                        until,
-                        bymonthday: repeatInfo.condition.attributes.day,
-                    };
-                }
-                break;
-        }
-        if (recurrence) {
-            if (repeatInfo.exclusive_datetimes && repeatInfo.exclusive_datetimes.exclusive_datetime) {
-                if (Array.isArray(repeatInfo.exclusive_datetimes.exclusive_datetime)) {
-                    recurrence.exclusiveDates = repeatInfo.exclusive_datetimes.exclusive_datetime.map(datetime =>
-                        moment.tz(datetime.attributes.start, timezone),
-                    );
-                } else {
-                    recurrence.exclusiveDates = [
-                        moment.tz(repeatInfo.exclusive_datetimes.exclusive_datetime.attributes.start, timezone),
-                    ];
-                }
-            }
-            return recurrence;
-        } else {
-            throw new Error(`Unsupported format of recurrence event: ${JSON.stringify(repeatInfo)}`);
-        }
-    };
-
     /**
      * Convert Garoon PublicType to Visibility.
      *
@@ -433,53 +248,6 @@ export class Schedule {
         }
     };
 
-    // 毎日繰り返し RRULE:FREQ=DAILY
-    // 平日繰り返し RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR
-    // 毎月9日に繰り返し RRULE:FREQ=MONTHLY;BYMONTHDAY=9
-    // 毎月第二水曜日に繰り返し RRULE:FREQ=MONTHLY;BYDAY=2WE
-    // ５週間ごとに火曜日に繰り返し RRULE:FREQ=WEEKLY;INTERVAL=5;BYDAY=TU
-    // 2日ごとに8/17まで RRULE:FREQ=DAILY;UNTIL=20170817T153000Z;INTERVAL=2
-    // 2年ごと5回まで RRULE:FREQ=YEARLY;COUNT=5;INTERVAL=2
-    // 例外的に9/19はなし EXDATE;TZID=Asia/Tokyo:20170919T000000
-    private static googleRecurrenceFromRecurrence = (
-        start: DateTime,
-        recurrence: Recurrences | undefined,
-    ): string[] => {
-        if (!recurrence) {
-            return [];
-        }
-        const rrules: string[] = [`RRULE:FREQ=${recurrence.pattern}`];
-        let exrules: string[] = [];
-        if (recurrence.count) {
-            rrules.push(`COUNT=${recurrence.count}`);
-        } else if (recurrence.until) {
-            rrules.push(`UNTIL=${recurrence.until.format("YYYYMMDD")}`);
-        }
-        if (recurrence.interval) {
-            rrules.push(`INTERVAL=${recurrence.interval}`);
-        }
-        if (recurrence.pattern === RecurrencePattern.Weekly && recurrence.byday) {
-            rrules.push(`BYDAY=${recurrence.byday.join(",")}`);
-        } else if (recurrence.pattern === RecurrencePattern.Monthly) {
-            if (recurrence.byday) {
-                rrules.push(`BYDAY=${recurrence.byday.join("")}`);
-            } else if (recurrence.bymonthday) {
-                rrules.push(`BYDAY=${recurrence.bymonthday}`);
-            }
-        }
-
-        if (recurrence.exclusiveDates) {
-            exrules = recurrence.exclusiveDates.map(
-                date =>
-                    `EXDATE;TZID=${date.tz()};VALUE=DATE-TIME:${date.format("YYYYMMDD")}T${(start.hasTime
-                        ? start.moment
-                        : date
-                    ).format("HHmmss")}`,
-            );
-        }
-        return [rrules.join(";")].concat(exrules);
-    };
-
     public readonly id: string;
     public readonly version: string;
     public readonly start: DateTime;
@@ -494,7 +262,7 @@ export class Schedule {
     private readonly visibility: Visibility;
     private readonly status: Status;
     private readonly transparency: Transparency;
-    private readonly recurrence?: Recurrences;
+    private readonly recurrence?: Recurrence;
 
     constructor(obj: {
         id: string;
@@ -508,7 +276,7 @@ export class Schedule {
         visibility: Visibility;
         status: Status;
         transparency: Transparency;
-        recurrence?: Recurrences;
+        recurrence?: Recurrence;
         garoonEvent: garoon.schedule.EventType;
     }) {
         this.id = obj.id;
@@ -542,7 +310,7 @@ export class Schedule {
             visibility: this.visibility,
             status: this.status,
             transparency: this.transparency,
-            recurrence: Schedule.googleRecurrenceFromRecurrence(this.start, this.recurrence),
+            recurrence: this.recurrence ? this.recurrence.googleRecurrenceFromRecurrence(this.start) : [],
             source: { title: this.summary, url: url.format(garoonEventUrl) },
         };
         if (this.description) {

@@ -1,16 +1,10 @@
 import test from "ava";
 import * as moment from "moment-timezone";
 import * as url from "url";
-import {
-    RecurrenceDaily,
-    RecurrencePattern,
-    Schedule,
-    Status,
-    Transparency,
-    Visibility,
-} from "../../../app/js/main/schedule";
+import { Schedule, Status, Transparency, Visibility } from "../../../app/js/main/schedule";
 import { Attendee } from "../../../app/js/main/schedule/attendee";
 import { DateTime } from "../../../app/js/main/schedule/datetime";
+import { RecurrenceDaily } from "../../../app/js/main/schedule/recurrence/daily";
 
 const garoonUrl: url.URL = new url.URL("http://example.com/");
 
@@ -72,14 +66,10 @@ test("schedule can parse a recurrence event which has exclusive datetimes.", asy
         },
     };
     const scheduleFromJson = Schedule.fromGaroonSchedule(json.schedule_event);
-    const recurrence: RecurrenceDaily = {
-        exclusiveDates: [
-            moment.tz("2017-09-08T00:00:00+09:00", "Asia/Tokyo"),
-            moment.tz("2017-09-09T00:00:00+09:00", "Asia/Tokyo"),
-        ],
-        pattern: RecurrencePattern.Daily,
-        until: moment.tz("2017-09-10 00:30:00", "Asia/Tokyo"),
-    };
+    const recurrence: RecurrenceDaily = new RecurrenceDaily(moment.tz("2017-09-10 00:30:00", "Asia/Tokyo"), [
+        moment.tz("2017-09-08T00:00:00+09:00", "Asia/Tokyo"),
+        moment.tz("2017-09-09T00:00:00+09:00", "Asia/Tokyo"),
+    ]);
     const schedule: Schedule = new Schedule({
         id: "1234",
         version: "1504772224",
