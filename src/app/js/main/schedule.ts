@@ -282,6 +282,7 @@ export class Schedule {
         this.id = obj.id;
         this.version = obj.version;
         this.summary = obj.summary;
+        this.description = obj.description;
         this.locations = obj.locations;
         this.attendees = obj.attendees;
         this.start = obj.start;

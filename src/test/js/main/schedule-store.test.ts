@@ -1,12 +1,12 @@
 import test from "ava";
 import * as moment from "moment-timezone";
+import * as url from "url";
 import { Schedule, Status, Transparency, Visibility } from "../../../app/js/main/schedule";
 import { ScheduleStore } from "../../../app/js/main/schedule-store";
 import { Attendee } from "../../../app/js/main/schedule/attendee";
 import { DateTime } from "../../../app/js/main/schedule/datetime";
 import { Location } from "../../../app/js/main/schedule/location";
-import { RecurrenceWeeklyPattern } from "../../../app/js/main/schedule/recurrence";
-import { RecurrenceWeekly } from "../../../app/js/main/schedule/recurrence/weekly";
+import { Recurrence, RecurrencePattern, RecurrenceWeeklyPattern } from "../../../app/js/main/schedule/recurrence";
 
 test("schedule store can store and load schedules", async t => {
     const store = new ScheduleStore();
@@ -59,8 +59,8 @@ test("schedule store can store and load schedules", async t => {
                 condition: {
                     attributes: {
                         type: "week",
-                        day: "7",
-                        week: "5",
+                        day: 7,
+                        week: 5,
                         start_date: "2017-04-07",
                         end_date: "2018-04-01",
                         start_time: "14:00:00",
@@ -71,7 +71,8 @@ test("schedule store can store and load schedules", async t => {
         },
     };
     const id = "123";
-    const recurrence: RecurrenceWeekly = new RecurrenceWeekly(
+    const recurrence: Recurrence = new Recurrence(
+        RecurrencePattern.Weekly,
         moment.tz("2018-04-01 15:00:00", "Asia/Tokyo"),
         [],
         [RecurrenceWeeklyPattern.Friday],
@@ -95,5 +96,9 @@ test("schedule store can store and load schedules", async t => {
     t.falsy(await store.get(id));
     // Store
     await store.set(schedule);
-    t.deepEqual(await store.get(id), schedule);
+    const garoonUrl: url.URL = new url.URL("http://example.com/");
+    t.deepEqual(
+        await store.get(id).then(s => s && s.toGoogleCalendarEvent(garoonUrl)),
+        schedule.toGoogleCalendarEvent(garoonUrl),
+    );
 });

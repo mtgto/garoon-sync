@@ -1,4 +1,4 @@
-import Datastore = require("nedb");
+import * as Datastore from "nedb";
 import log from "./log";
 
 /**

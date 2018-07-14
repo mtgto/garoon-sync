@@ -1,9 +1,6 @@
 import * as garoon from "garoon";
 import * as moment from "moment-timezone";
-import { DateTime } from "../datetime";
-import { RecurrenceDaily } from "./daily";
-import { RecurrenceMonthly } from "./monthly";
-import { RecurrenceWeekly } from "./weekly";
+import { DateTime } from "./datetime";
 
 export const enum RecurrencePattern {
     Daily = "DAILY",
@@ -32,7 +29,7 @@ export const RecurrenceWeekdayPattern: RecurrenceWeeklyPattern[] = [
 /**
  * @todo Change exclusiveDates to readonly (See recurrenceFromRepeatInfo function).
  */
-export abstract class Recurrence {
+export class Recurrence {
     public static recurrenceFromRepeatInfo = (
         repeatInfo: garoon.schedule.EventTypeRepeatInfo,
         timezone: string,
@@ -66,19 +63,19 @@ export abstract class Recurrence {
 
         switch (repeatInfo.condition.attributes.type) {
             case "day":
-                return new RecurrenceDaily(until, exclusiveDates);
+                return new Recurrence(RecurrencePattern.Daily, until, exclusiveDates);
             case "weekday":
-                return new RecurrenceWeekly(until, exclusiveDates, RecurrenceWeekdayPattern);
+                return new Recurrence(RecurrencePattern.Weekly, until, exclusiveDates, RecurrenceWeekdayPattern);
             case "week":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceWeekly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Weekly, until, exclusiveDates, [
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
                 }
                 break;
             case "1stweek":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceMonthly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Monthly, until, exclusiveDates, undefined, [
                         1,
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
@@ -86,7 +83,7 @@ export abstract class Recurrence {
                 break;
             case "2ndweek":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceMonthly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Monthly, until, exclusiveDates, undefined, [
                         2,
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
@@ -94,7 +91,7 @@ export abstract class Recurrence {
                 break;
             case "3rdweek":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceMonthly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Monthly, until, exclusiveDates, undefined, [
                         3,
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
@@ -102,7 +99,7 @@ export abstract class Recurrence {
                 break;
             case "4thweek":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceMonthly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Monthly, until, exclusiveDates, undefined, [
                         4,
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
@@ -110,7 +107,7 @@ export abstract class Recurrence {
                 break;
             case "lastweek":
                 if (repeatInfo.condition.attributes.week) {
-                    return new RecurrenceMonthly(until, exclusiveDates, [
+                    return new Recurrence(RecurrencePattern.Monthly, until, exclusiveDates, undefined, [
                         5,
                         Recurrence.recurrenceWeeklyPatternFromWeekday(repeatInfo.condition.attributes.week),
                     ]);
@@ -118,28 +115,42 @@ export abstract class Recurrence {
                 break;
             case "month":
                 if (repeatInfo.condition.attributes.day) {
-                    return new RecurrenceMonthly(until, exclusiveDates, undefined, repeatInfo.condition.attributes.day);
+                    return new Recurrence(
+                        RecurrencePattern.Monthly,
+                        until,
+                        exclusiveDates,
+                        undefined,
+                        undefined,
+                        repeatInfo.condition.attributes.day,
+                    );
                 }
                 break;
         }
         throw new Error(`Unsupported format of recurrence event: ${JSON.stringify(repeatInfo)}`);
     };
 
-    private static recurrenceWeeklyPatternFromWeekday = (day: number): RecurrenceWeeklyPattern => {
+    private static recurrenceWeeklyPatternFromWeekday = (day: number | string): RecurrenceWeeklyPattern => {
         switch (day) {
             case 0:
+            case "0":
                 return RecurrenceWeeklyPattern.Sunday;
             case 1:
+            case "1":
                 return RecurrenceWeeklyPattern.Monday;
             case 2:
+            case "2":
                 return RecurrenceWeeklyPattern.Tuesday;
             case 3:
+            case "3":
                 return RecurrenceWeeklyPattern.Wednesday;
             case 4:
+            case "4":
                 return RecurrenceWeeklyPattern.Thursday;
             case 5:
+            case "5":
                 return RecurrenceWeeklyPattern.Friday;
             case 6:
+            case "6":
                 return RecurrenceWeeklyPattern.Saturday;
         }
         throw new Error(`Invalid input ${day} of recurrence day.`);
@@ -150,17 +161,26 @@ export abstract class Recurrence {
     private readonly count?: number;
     private readonly until: moment.Moment;
     private readonly exclusiveDates: ReadonlyArray<moment.Moment>; // start date
+    private readonly byday?: ReadonlyArray<RecurrenceWeeklyPattern>;
+    private readonly bydayForMonth?: [number, RecurrenceWeeklyPattern];
+    private readonly bymonthday?: number;
 
     constructor(
         pattern: RecurrencePattern,
         until: moment.Moment,
         exclusiveDates: moment.Moment[],
+        byday?: ReadonlyArray<RecurrenceWeeklyPattern>,
+        bydayForMonth?: [number, RecurrenceWeeklyPattern],
+        bymonthday?: number,
         interval?: number,
         count?: number,
     ) {
         this.pattern = pattern;
         this.until = until;
         this.exclusiveDates = exclusiveDates;
+        this.byday = byday;
+        this.bydayForMonth = bydayForMonth;
+        this.bymonthday = bymonthday;
         this.interval = interval;
         this.count = count;
     }
@@ -184,15 +204,13 @@ export abstract class Recurrence {
         if (this.interval) {
             rrules.push(`INTERVAL=${this.interval}`);
         }
-        if (this instanceof RecurrenceWeekly) {
+        if (this.pattern === RecurrencePattern.Weekly && this.byday) {
             rrules.push(`BYDAY=${this.byday.join(",")}`);
-        } else if (this instanceof RecurrenceMonthly) {
-            const byday: [number, RecurrenceWeeklyPattern] | undefined = (this as RecurrenceMonthly).byday;
-            const bymonthday: number | undefined = (this as RecurrenceMonthly).bymonthday;
-            if (byday) {
-                rrules.push(`BYDAY=${byday.join("")}`);
-            } else if (bymonthday) {
-                rrules.push(`BYDAY=${bymonthday}`);
+        } else if (this.pattern === RecurrencePattern.Monthly) {
+            if (this.bydayForMonth) {
+                rrules.push(`BYDAY=${this.bydayForMonth.join("")}`);
+            } else if (this.bymonthday) {
+                rrules.push(`BYDAY=${this.bymonthday}`);
             }
         }
 
