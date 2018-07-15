@@ -18,11 +18,7 @@ import {
 } from "./modules/sync";
 import { Schedule } from "./schedule";
 import { ScheduleStore } from "./schedule-store";
-
-type BaseGetUsersByIdResponseType = garoon.base.BaseGetUsersByIdResponseType;
-type ScheduleGetEventsByIdResponseType = garoon.schedule.ScheduleGetEventsByIdResponseType;
-type EventType = garoon.schedule.EventType;
-type UserType = garoon.base.UserType;
+import { DateTime } from "./schedule/datetime";
 
 /**
  * Synchronize Google Calendar with Garoon schedule.
@@ -50,12 +46,16 @@ class Synchronizer {
             throw new Error(message);
         }
 
-        let schedules: Schedule[];
+        const start: moment.Moment = moment();
+        const end: moment.Moment = moment(start).add(this.syncPeriod);
+        let schedules: ReadonlyArray<Schedule>;
+        const schedulesInStore: ReadonlyArray<Schedule> = await scheduleStore.getSchedules(
+            new DateTime(start, false),
+            new DateTime(end, false),
+        );
         try {
             // Fetch Garoon schedules
             syncStateStore.dispatch(startFetchGaroon());
-            const start: moment.Moment = moment();
-            const end: moment.Moment = moment(start).add(this.syncPeriod);
             log.info(`Start sync since ${start.format()} to ${end.format()}.`);
             schedules = await this.fetchGaroonSchedules(start, end);
             syncStateStore.dispatch(endFetchGaroon(SyncResult.Success));
@@ -70,6 +70,8 @@ class Synchronizer {
             // Send schedules to Google Calendar
             let [addCount, modifyCount, ignoreCount] = [0, 0, 0];
             syncStateStore.dispatch(startSyncGoogleCalendar());
+            // Update schedules not in Garoon API.
+            await this.syncSchedulesNotInStore(calendarId, schedules, schedulesInStore, garoonEventPageUrl);
             // Send request serially (Until googleapis supports batch request)
             await schedules.reduce((promise: Promise<void>, schedule: Schedule, index: number) => {
                 return promise.then(async () => {
@@ -151,12 +153,46 @@ class Synchronizer {
             syncStateStore.dispatch(endSyncGoogleCalendar(SyncResult.Success));
             syncStateStore.dispatch(endSync(SyncResult.Success));
             log.info(`Sync successed. ${addCount} added, ${modifyCount} modified and ${ignoreCount} ignored.`);
-            return Promise.resolve(true);
+            return true;
         } catch (error) {
             log.warn(`Failed to sync schedule. ${error}`);
             syncStateStore.dispatch(endSync(SyncResult.Failed));
-            return Promise.resolve(false);
+            return false;
         }
+    };
+
+    /**
+     * Sync the schedules to Google Calendar not in the garoon response.
+     *
+     * If the schedule is moved, update to Google Calendar.
+     * If the schedule is missing, delete from Google Calendar.
+     */
+    private syncSchedulesNotInStore = async (
+        calendarId: string,
+        schedulesInApi: ReadonlyArray<Schedule>,
+        schedulesInStore: ReadonlyArray<Schedule>,
+        garoonEventPageUrl: url.URL,
+    ): Promise<any> => {
+        const scheduleIdsInApi: ReadonlyArray<string> = schedulesInApi.map(schedule => schedule.id);
+        const scheduleIdsOnlyStore = schedulesInStore
+            .filter(schedule => scheduleIdsInApi.indexOf(schedule.id) === -1)
+            .map(schedule => schedule.id);
+        return this.fetchGaroonSchedulesByIds(scheduleIdsOnlyStore).then(schedules =>
+            Promise.all(
+                scheduleIdsOnlyStore.map(id => {
+                    const schedule: Schedule | undefined = schedules.find(s => s.id === id);
+                    if (schedule) {
+                        // schedule period is changed.
+                        log.info(`Update schedule ${id} because the period is changed in Garoon.`);
+                        return googleClient.updateEvent(calendarId, schedule.toGoogleCalendarEvent(garoonEventPageUrl));
+                    } else {
+                        // schedule is deleted.
+                        log.info(`Delete schedule ${id} because does not exists in Garoon.`);
+                        return googleClient.deleteEvent(calendarId, id);
+                    }
+                }),
+            ),
+        );
     };
 
     /**
@@ -174,21 +210,49 @@ class Synchronizer {
             .then(response => {
                 if (response.schedule_event) {
                     if (Array.isArray(response.schedule_event)) {
-                        return Promise.resolve(
-                            response.schedule_event.map(event => Schedule.fromGaroonSchedule(event)),
-                        );
+                        return response.schedule_event.map(event => Schedule.fromGaroonSchedule(event));
                     } else {
-                        return Promise.resolve([Schedule.fromGaroonSchedule(response.schedule_event)]);
+                        return [Schedule.fromGaroonSchedule(response.schedule_event)];
                     }
                 } else {
-                    return Promise.resolve([]);
+                    return [];
                 }
             })
             .catch(reason => {
                 // todo Retry only if failed by garoon's temporary error.
-                log.info(`Failed to fetch garoon schedules. reason: ${reason}`);
+                log.warn(`Failed to fetch garoon schedules. reason: ${reason}`);
                 if (maxRetry > 0) {
                     return this.fetchGaroonSchedules(start, end, maxRetry - 1);
+                } else {
+                    return Promise.reject(reason);
+                }
+            });
+    };
+
+    private fetchGaroonSchedulesByIds = async (ids: string[], maxRetry: number = 0): Promise<Schedule[]> => {
+        if (ids.length === 0) {
+            return Promise.resolve([]);
+        }
+        return garoonClient
+            .getEventsByIds(ids)
+            .then(response => {
+                if (response && response.schedule_event) {
+                    if (Array.isArray(response.schedule_event)) {
+                        return Promise.resolve(
+                            response.schedule_event.map(event => Schedule.fromGaroonSchedule(event)),
+                        );
+                    } else {
+                        return [Schedule.fromGaroonSchedule(response.schedule_event)];
+                    }
+                } else {
+                    return [];
+                }
+            })
+            .catch(reason => {
+                // todo Retry only if failed by garoon's temporary error.
+                log.warn(`Failed to fetch garoon schedules by ids. reason: ${reason}`);
+                if (maxRetry > 0) {
+                    return this.fetchGaroonSchedulesByIds(ids, maxRetry - 1);
                 } else {
                     return Promise.reject(reason);
                 }

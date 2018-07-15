@@ -1,6 +1,6 @@
 import * as packager from "electron-packager";
 import rebuild from "electron-rebuild";
-import {parse, ParsedPath} from "path";
+import { parse, ParsedPath } from "path";
 
 // path starts with slash. like: "/README.md"
 const needPaths: string[] = [
@@ -11,9 +11,9 @@ const needPaths: string[] = [
     "/node_modules/electron-store",
     "/node_modules/googleapis",
     "/node_modules/keytar",
-    "/node_modules/cookie" // garoon require cookie, but garoon-sync also required.
+    "/node_modules/cookie", // garoon require cookie, but garoon-sync also required.
 ];
-const config: {version: string} = require("../../package.json");
+const config: { version: string } = require("../../package.json");
 
 export const ignores: packager.ignoreFunction = (path: string): boolean => {
     const paths: ParsedPath = parse(path);
@@ -22,7 +22,7 @@ export const ignores: packager.ignoreFunction = (path: string): boolean => {
     }
 
     return path.length > 0 && path !== "/node_modules" && needPaths.every(needPath => path.indexOf(needPath) !== 0);
-}
+};
 
 const opts: packager.Options = {
     dir: "./",
@@ -38,11 +38,13 @@ const opts: packager.Options = {
     overwrite: true,
     prune: false,
     ignore: ignores,
-    afterCopy: [(buildPath: string, electronVersion: string, platform: string, arch: string, callback: (err?: any) => void) => {
-        rebuild({buildPath, electronVersion, arch})
-            .then(() => callback())
-            .catch((error) => callback(error));
-    }]
+    afterCopy: [
+        (buildPath: string, electronVersion: string, platform: string, arch: string, callback: (err?: any) => void) => {
+            rebuild({ buildPath, electronVersion, arch })
+                .then(() => callback())
+                .catch(error => callback(error));
+        },
+    ],
 };
 
 packager(opts, (err, appPaths) => {

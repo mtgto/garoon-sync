@@ -92,7 +92,7 @@ test("schedule store can store and load schedules", async t => {
         recurrence,
         garoonEvent: json.schedule_event,
     });
-    // Before store, there is no user in store.
+    // Before store, there is no schedule which has an id in store.
     t.falsy(await store.get(id));
     // Store
     await store.set(schedule);
@@ -101,4 +101,51 @@ test("schedule store can store and load schedules", async t => {
         await store.get(id).then(s => s && s.toGoogleCalendarEvent(garoonUrl)),
         schedule.toGoogleCalendarEvent(garoonUrl),
     );
+});
+
+test("schedule store can find schedules with range", async t => {
+    const createSchedule = (id: string, start: moment.Moment, end: moment.Moment): Schedule => {
+        const json: any = {
+            attributes: {
+                id,
+                event_type: "normal",
+                public_type: "public",
+                plan: "",
+                detail: "",
+                description: "",
+                version: "1490851642",
+                timezone: "Asia/Tokyo",
+                end_timezone: "Asia/Tokyo",
+                allday: "false",
+                start_only: "false",
+            },
+            members: {
+                member: [
+                    {
+                        user: {
+                            attributes: {
+                                id: "10",
+                                name: "田中 太郎",
+                                order: "0",
+                            },
+                        },
+                    },
+                ],
+            },
+            when: {
+                datetime: {
+                    attributes: {
+                        start: start.utc().format(),
+                        end: end.utc().format(),
+                    },
+                },
+            },
+        };
+        return Schedule.fromGaroonSchedule(json);
+    };
+    const store = new ScheduleStore();
+    const tz: string = "Asia/Tokyo";
+    const schedules = [createSchedule("1", moment("2018-07-15 9:00").tz(tz), moment("2018-07-15 10:00").tz(tz))];
+    await Promise.all(schedules.map(schedule => store.set(schedule)));
+    // await store.getSchedules(moment("2018-07-15 9:00").tz(tz), moment("2018-07-15 12:00").tz(tz));
 });

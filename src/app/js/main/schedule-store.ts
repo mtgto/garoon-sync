@@ -24,14 +24,30 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         super(datastorePath);
     }
 
+    /**
+     * Get schedules which is overwrapped between start (inclusive) and end (exclusive).
+     *
+     * Example:
+     *   A schedule [10:00, 12:00) is overwrapped between [9:00, 13:00) and also [9:00, 11:00), [11:00, 13:00).
+     */
     public getSchedules = (start: DateTime, end: DateTime): Promise<Schedule[]> => {
-        this.datastore.find<StoredSchedule>({
-            $or: [
-                { start: { $gte: this.serializeDateTime(start, true) } },
-                { end: { $lte: this.serializeDateTime(end, false) } },
-            ],
-        });
-        return Promise.resolve([]);
+        return new Promise((resolve, reject) =>
+            this.datastore.find<StoredSchedule>(
+                {
+                    $or: [
+                        { start: { $gte: this.serializeDateTime(start, true) } },
+                        { end: { $lt: this.serializeDateTime(end, false) } },
+                    ],
+                },
+                (err: Error, docs: ReadonlyArray<StoredSchedule>) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(docs.map(doc => this.deserializer(doc)));
+                    }
+                },
+            ),
+        );
     };
 
     public serializer = (schedule: Schedule): StoredSchedule => ({

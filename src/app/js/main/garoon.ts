@@ -124,6 +124,22 @@ class GaroonClient {
         }
     };
 
+    public getEventsByIds = async (ids: string[]): Promise<garoon.schedule.ScheduleGetEventsByIdResponseType> => {
+        if (this.garoonClient) {
+            if (this.authMode === AuthMode.Cookie && !this.sessionId) {
+                await this.login();
+            }
+            const parameters: garoon.schedule.ScheduleGetEventsByIdRequestType = {
+                event_id: ids.length === 1 ? ids[0] : ids,
+            };
+            return this.garoonClient.ScheduleGetEventsById(parameters);
+        } else {
+            const message = `Can not get events because Garoon credentials is not set.`;
+            log.warn(message);
+            return Promise.reject(new Error(message));
+        }
+    };
+
     public getApplicationInformation = async (): Promise<garoon.base.BaseGetApplicationInformationResponseType> => {
         if (this.garoonClient) {
             if (this.authMode === AuthMode.Cookie && !this.sessionId) {
