@@ -34,9 +34,9 @@ export class ScheduleStore extends Store<string, Schedule, StoredSchedule> {
         return new Promise((resolve, reject) =>
             this.datastore.find<StoredSchedule>(
                 {
-                    $or: [
-                        { start: { $gte: this.serializeDateTime(start, true) } },
-                        { end: { $lt: this.serializeDateTime(end, false) } },
+                    $and: [
+                        { start: { $lt: this.serializeDateTime(end, false) } },
+                        { end: { $gt: this.serializeDateTime(start, true) } },
                     ],
                 },
                 (err: Error, docs: ReadonlyArray<StoredSchedule>) => {

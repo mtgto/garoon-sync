@@ -145,7 +145,18 @@ test("schedule store can find schedules with range", async t => {
     };
     const store = new ScheduleStore();
     const tz: string = "Asia/Tokyo";
-    const schedules = [createSchedule("1", moment("2018-07-15 9:00").tz(tz), moment("2018-07-15 10:00").tz(tz))];
+    const schedules = [
+        createSchedule("1", moment("2018-07-15 9:00").tz(tz), moment("2018-07-15 10:00").tz(tz)),
+        createSchedule("2", moment("2018-07-15 8:00").tz(tz), moment("2018-07-15 10:00").tz(tz)),
+        createSchedule("3", moment("2018-07-15 8:00").tz(tz), moment("2018-07-15 9:00").tz(tz)),
+        createSchedule("4", moment("2018-07-15 8:00").tz(tz), moment("2018-07-15 8:59:59").tz(tz)),
+        createSchedule("5", moment("2018-07-15 12:00").tz(tz), moment("2018-07-15 13:00").tz(tz)),
+        createSchedule("6", moment("2018-07-15 11:00").tz(tz), moment("2018-07-15 12:00").tz(tz)),
+    ];
     await Promise.all(schedules.map(schedule => store.set(schedule)));
-    // await store.getSchedules(moment("2018-07-15 9:00").tz(tz), moment("2018-07-15 12:00").tz(tz));
+    const schedulesInStore = await store.getSchedules(
+        new DateTime(moment("2018-07-15 9:00").tz(tz), true),
+        new DateTime(moment("2018-07-15 12:00").tz(tz), true),
+    );
+    t.deepEqual(schedulesInStore.map(s => s.id), ["1", "2", "6"]);
 });

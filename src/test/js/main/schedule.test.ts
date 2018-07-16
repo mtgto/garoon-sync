@@ -72,11 +72,7 @@ test("schedule which has exclusive datetime can be converted into a google calen
         visibility: "private",
         status: "confirmed",
         transparency: "opaque",
-        recurrence: [
-            "RRULE:FREQ=DAILY;UNTIL=20170910",
-            "EXDATE;TZID=Asia/Tokyo;VALUE=DATE-TIME:20170908T001500",
-            "EXDATE;TZID=Asia/Tokyo;VALUE=DATE-TIME:20170909T001500",
-        ],
+        recurrence: ["RRULE:FREQ=DAILY;UNTIL=20170910", "EXDATE:20170908T001500", "EXDATE:20170909T001500"],
         source: { title: "繰り返し予定のテスト", url: "http://example.com/?event=1234" },
     };
     t.deepEqual(googleCalendarEvent, expected);
