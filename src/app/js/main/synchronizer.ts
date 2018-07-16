@@ -197,7 +197,20 @@ class Synchronizer {
                     } else {
                         // schedule is deleted.
                         log.info(`Delete schedule ${id} because does not exists in Garoon.`);
-                        return googleClient.deleteEvent(calendarId, id).then(() => scheduleStore.remove(id));
+                        return googleClient
+                            .deleteEvent(calendarId, id)
+                            .catch(error => {
+                                if (
+                                    (error as GoogleCalendarApiErrorResponse).reason ===
+                                    GoogleCalendarApiErrorReason.NotFound
+                                ) {
+                                    log.info(`A deleting schedule ID "${id}" is alread not found.`);
+                                    return Promise.resolve();
+                                } else {
+                                    return Promise.reject(error);
+                                }
+                            })
+                            .then(() => scheduleStore.remove(id));
                     }
                 }),
             ),
