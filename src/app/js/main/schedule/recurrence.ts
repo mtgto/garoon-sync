@@ -192,7 +192,7 @@ export class Recurrence {
     // ５週間ごとに火曜日に繰り返し RRULE:FREQ=WEEKLY;INTERVAL=5;BYDAY=TU
     // 2日ごとに8/17まで RRULE:FREQ=DAILY;UNTIL=20170817T153000Z;INTERVAL=2
     // 2年ごと5回まで RRULE:FREQ=YEARLY;COUNT=5;INTERVAL=2
-    // 例外的に9/19はなし EXDATE;TZID=Asia/Tokyo:20170919T000000
+    // 例外的に9/19はなし (TimeZoneを指定すると無視される & 繰り返し予定と同じタイムゾーンじゃないといけない) EXDATE:20170919T000000
     public googleRecurrenceFromRecurrence = (start: DateTime): string[] => {
         const rrules: string[] = [`RRULE:FREQ=${this.pattern}`];
         let exrules: string[] = [];
@@ -216,11 +216,7 @@ export class Recurrence {
 
         if (this.exclusiveDates.length > 0) {
             exrules = this.exclusiveDates.map(
-                date =>
-                    `EXDATE;TZID=${date.tz()};VALUE=DATE-TIME:${date.format("YYYYMMDD")}T${(start.hasTime
-                        ? start.moment
-                        : date
-                    ).format("HHmmss")}`,
+                date => `EXDATE:${date.format("YYYYMMDD")}T${(start.hasTime ? start.moment : date).format("HHmmss")}`,
             );
         }
         return [rrules.join(";")].concat(exrules);

@@ -71,7 +71,13 @@ class Synchronizer {
             let [addCount, modifyCount, ignoreCount] = [0, 0, 0];
             syncStateStore.dispatch(startSyncGoogleCalendar());
             // Update schedules not in Garoon API.
-            await this.syncSchedulesNotInStore(calendarId, schedules, schedulesInStore, garoonEventPageUrl);
+            await this.syncSchedulesNotInStore(
+                calendarId,
+                schedules,
+                schedulesInStore,
+                garoonEventPageUrl,
+                scheduleStore,
+            );
             // Send request serially (Until googleapis supports batch request)
             await schedules.reduce((promise: Promise<void>, schedule: Schedule, index: number) => {
                 return promise.then(async () => {
@@ -172,6 +178,7 @@ class Synchronizer {
         schedulesInApi: ReadonlyArray<Schedule>,
         schedulesInStore: ReadonlyArray<Schedule>,
         garoonEventPageUrl: url.URL,
+        scheduleStore: ScheduleStore,
     ): Promise<any> => {
         const scheduleIdsInApi: ReadonlyArray<string> = schedulesInApi.map(schedule => schedule.id);
         const scheduleIdsOnlyStore = schedulesInStore
@@ -184,11 +191,13 @@ class Synchronizer {
                     if (schedule) {
                         // schedule period is changed.
                         log.info(`Update schedule ${id} because the period is changed in Garoon.`);
-                        return googleClient.updateEvent(calendarId, schedule.toGoogleCalendarEvent(garoonEventPageUrl));
+                        return googleClient
+                            .updateEvent(calendarId, schedule.toGoogleCalendarEvent(garoonEventPageUrl))
+                            .then(() => scheduleStore.set(schedule));
                     } else {
                         // schedule is deleted.
                         log.info(`Delete schedule ${id} because does not exists in Garoon.`);
-                        return googleClient.deleteEvent(calendarId, id);
+                        return googleClient.deleteEvent(calendarId, id).then(() => scheduleStore.remove(id));
                     }
                 }),
             ),

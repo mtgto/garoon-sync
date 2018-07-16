@@ -64,4 +64,18 @@ export abstract class Store<Id, Entity extends { id: Id }, Serialized extends { 
             );
         });
     };
+
+    public readonly remove = async (id: Id): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            this.datastore.remove({ _id: id }, (err: Error, numRemoved: number) => {
+                if (err) {
+                    const message = `Failed to remove the entity id ${id}`;
+                    log.warn(message, err);
+                    reject(new Error(message));
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
 }

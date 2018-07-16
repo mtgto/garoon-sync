@@ -306,6 +306,7 @@ export class Schedule {
         let result: any = {
             id: this.id,
             summary: this.summary,
+            description: this.description,
             start: Schedule.googleDateTimeFromDateTime(this.start),
             end: Schedule.googleDateTimeFromDateTime(this.end),
             visibility: this.visibility,
