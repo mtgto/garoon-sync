@@ -1,6 +1,9 @@
-import { google } from "googleapis";
+// tslint:disable-next-line:no-implicit-dependencies
+import { AxiosResponse } from "axios";
+import { calendar_v3, google } from "googleapis";
 import { Calendar } from "../common/google";
 import log from "./log";
+type Event = calendar_v3.Schema$Event;
 
 /**
  * @todo abandon when googleapis provides types.
@@ -102,7 +105,7 @@ class GoogleClient {
      * Returns writable Google Calendar list.
      */
     public getWritableCalendars = async (calendars: Calendar[] = [], pageToken?: string): Promise<Calendar[]> => {
-        const calendar: any = google.calendar("v3");
+        const calendar: calendar_v3.Calendar = google.calendar("v3");
         return new Promise<Calendar[]>((resolve, reject) => {
             let parameters: CalendarListParameters = {
                 auth: this.oauth2Client,
@@ -161,50 +164,58 @@ class GoogleClient {
         };
     };
 
-    public insertEvent = async (calendarId: string, event: any): Promise<any> => {
-        const calendar: any = google.calendar("v3");
-        const parameters: any = {
+    public insertEvent = async (calendarId: string, event: Event): Promise<Event> => {
+        const calendar: calendar_v3.Calendar = google.calendar("v3");
+        const parameters: calendar_v3.Params$Resource$Events$Insert = {
             auth: this.oauth2Client,
             calendarId,
-            resource: event,
+            requestBody: event,
         };
-        return new Promise<void>((resolve, reject) => {
-            calendar.events.insert(parameters, (err: any, response: any) => {
+        return new Promise<Event>((resolve, reject) => {
+            calendar.events.insert(parameters, (err: Error | null, response?: AxiosResponse<Event> | null) => {
                 if (err) {
                     const message = "Error while trying to insert a event into a calendar.";
                     log.info(message, err); // todo info -> debug
                     reject(this.createErrorResponse(message, err));
+                } else if (!response) {
+                    const message = "Error no event resource is returned when inserted a event into a calendar.";
+                    log.warn(message, err);
+                    reject(this.createErrorResponse(message, undefined));
                 } else {
-                    resolve(response);
+                    resolve(response.data);
                 }
             });
         });
     };
 
-    public updateEvent = async (calendarId: string, event: any): Promise<any> => {
-        const calendar: any = google.calendar("v3");
-        const parameters: any = {
+    public updateEvent = async (calendarId: string, event: Event): Promise<Event> => {
+        const calendar: calendar_v3.Calendar = google.calendar("v3");
+        const parameters: calendar_v3.Params$Resource$Events$Update = {
             auth: this.oauth2Client,
             calendarId,
             eventId: event.id,
-            resource: event,
+            requestBody: event,
         };
-        return new Promise<void>((resolve, reject) => {
-            calendar.events.update(parameters, (err: any, response: any) => {
+        return new Promise<Event>((resolve, reject) => {
+            calendar.events.update(parameters, (err: Error | null, response?: AxiosResponse<Event> | null) => {
                 if (err) {
                     const message = "Error while trying to update a event into a calendar.";
                     log.info(message, err); // todo info -> debug
                     reject(this.createErrorResponse(message, err));
+                } else if (!response) {
+                    const message = "Error no event resource is returned when updated a event into a calendar.";
+                    log.warn(message, err);
+                    reject(this.createErrorResponse(message, undefined));
                 } else {
-                    resolve(response);
+                    resolve(response.data);
                 }
             });
         });
     };
 
-    public deleteEvent = async (calendarId: string, eventId: string): Promise<any> => {
-        const calendar: any = google.calendar("v3");
-        const parameters: any = {
+    public deleteEvent = async (calendarId: string, eventId: string): Promise<void> => {
+        const calendar: calendar_v3.Calendar = google.calendar("v3");
+        const parameters: calendar_v3.Params$Resource$Events$Delete = {
             auth: this.oauth2Client,
             calendarId,
             eventId,
@@ -216,7 +227,7 @@ class GoogleClient {
                     log.info(message, err); // todo info -> debug
                     reject(this.createErrorResponse(message, err));
                 } else {
-                    resolve(response);
+                    resolve();
                 }
             });
         });

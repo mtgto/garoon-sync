@@ -64,7 +64,7 @@ const GoogleAuthPage = withStyles(styles)((props: Props) => (
                 name="code"
                 value={props.googleCalendar.authorizationCode}
                 label="認可コード"
-                onChange={(e: React.FormEvent<HTMLInputElement>) => props.setAuthorizationCode(e.currentTarget.value)}
+                onChange={e => props.setAuthorizationCode(e.currentTarget.value)}
             />
             <br />
             <p>{informationMessage(props)}</p>

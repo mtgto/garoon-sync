@@ -80,7 +80,7 @@ const GaroonPage = withStyles(styles)((props: Props) => (
             error={props.garoon.username.errorText !== undefined}
             helperText={props.garoon.username.errorText}
             label="ユーザーID"
-            onChange={(e: React.FormEvent<HTMLInputElement>) => props.setUsername(e.currentTarget.value)}
+            onChange={e => props.setUsername(e.currentTarget.value)}
         />
         <br />
         <TextField
@@ -92,7 +92,7 @@ const GaroonPage = withStyles(styles)((props: Props) => (
             helperText={props.garoon.password.errorText}
             type="password"
             label="パスワード"
-            onChange={(e: React.FormEvent<HTMLInputElement>) => props.setPassword(e.currentTarget.value)}
+            onChange={e => props.setPassword(e.currentTarget.value)}
         />
         <br />
         <Typography>
