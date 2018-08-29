@@ -22,7 +22,7 @@ Garoon-Sync is a macOS / Windows GUI Application to sync your Cybozu Garoon sche
 
 ## Todo
 
--   [ ] Sync deleted schedules.
+-   [x] Sync deleted schedules.
 -   [ ] Optimize for update request of Google Calendar API to send only difference.
 -   [ ] Config window (customize sync interval)
 -   [ ] Remind by System notification
