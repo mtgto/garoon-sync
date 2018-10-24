@@ -10,7 +10,6 @@ const needPaths: string[] = [
     "/node_modules/garoon",
     "/node_modules/electron-store",
     "/node_modules/googleapis",
-    "/node_modules/keytar",
     "/node_modules/cookie", // garoon require cookie, but garoon-sync also required.
 ];
 const config: { version: string } = require("../../package.json");
@@ -47,9 +46,6 @@ const opts: packager.Options = {
     ],
 };
 
-packager(opts, (err, appPaths) => {
-    if (err) {
-        throw err;
-    }
-    console.log(`Package generated at "${appPaths}".`);
-});
+packager(opts)
+    .then(appPaths => console.log(`Package generated at "${appPaths}".`))
+    .catch(err => console.error(err));
